@@ -69,6 +69,29 @@
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
+					<!-- LOCAL EXECUTION -->
+					<muleHome>${mule.home}</muleHome>
+					<environments>
+						<environment>
+							<id>local</id>
+							<muleVersion>${app.runtime}</muleVersion>
+							<properties>
+								<!-- Override DB for local H2 -->
+								<key>db.url</key>
+								<value>jdbc:h2:file:./data/onboarding;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE</value>
+								<key>db.driver</key>
+								<value>org.h2.Driver</value>
+								<key>db.user</key>
+								<value>sa</value>
+								<key>db.password</key>
+								<value></value>
+								<!-- HTTP Port -->
+								<key>http.port</key>
+								<value>8081</value>
+							</properties>
+						</environment>
+					</environments>
+
 					<cloudHubDeployment>
 						<uri>https://anypoint.mulesoft.com</uri>
 						<muleVersion>4.5.0</muleVersion>

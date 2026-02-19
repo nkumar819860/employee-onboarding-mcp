@@ -34,7 +34,7 @@
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         emp_id INT,
                         name VARCHAR(255) NOT NULL,
-                        type VARCHAR(100),
+                        asset_type VARCHAR(100),
                         status VARCHAR(50) DEFAULT 'assigned',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (emp_id) REFERENCES employees(id) ON DELETE CASCADE
@@ -304,8 +304,8 @@ else
         
         <try doc:name="Try Create Asset">
             <db:insert config-ref="Database_Config" doc:name="Insert Asset">
-                <db:sql><![CDATA[INSERT INTO assets (emp_id, name, type, status) 
-                VALUES (#[payload.emp_id], #[payload.name], #[payload.type default 'equipment'], #[payload.status default 'assigned'])]]></db:sql>
+                <db:sql><![CDATA[INSERT INTO assets (emp_id, name, asset_type, status) 
+                VALUES (#[payload.emp_id], #[payload.name], #[payload.asset_type default 'equipment'], #[payload.status default 'assigned'])]]></db:sql>
             </db:insert>
             <db:select config-ref="Database_Config" doc:name="Get Created Asset">
                 <db:sql><![CDATA[SELECT * FROM assets WHERE emp_id = #[payload.emp_id] AND name = #[payload.name] ORDER BY id DESC LIMIT 1]]></db:sql>
@@ -470,7 +470,7 @@ output application/json
                 description: "Create asset for employee",
                 payload: {
                     name: "string (required)",
-                    type: "string (optional, default: equipment)",
+                    asset_type: "string (optional, default: equipment)",
                     status: "string (optional, default: assigned)"
                 }
             },
