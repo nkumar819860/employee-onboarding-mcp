@@ -1,31 +1,34 @@
 @echo off
 echo ========================================
-echo CLOUDHUB DEPLOY - BYPASS EXCHANGE
+echo MCP CLOUDHUB DEPLOY - COE AUTH (NO .env)
 echo ========================================
 
-REM Load .env
-if exist .env (for /f "tokens=1,2 delims==" %%a in (.env) do set %%a=%%b)
-
-REM 🔥 COMMAND LINE FLAGS OVERRIDE EVERYTHING
-mvn clean install -DskipTests=true ^
-  -DskipExchangeDeploy=true ^
-  -Dmule.deploy.skipExchange=true ^
-  -Dmaven.javadoc.skip=true ^
-  -Dmaven.source.skip=true ^
-  -Dcheckstyle.skip=true ^
-  -Dspotless.skip=true
-
+REM ========================================
+REM COE Business Group = FULL Maven Server Auth
+REM ========================================
+echo [INFO] Using COE credentials from settings.xml
+echo [INFO] App: employee-onboarding-mcp-server
+echo [INFO] Env: Sandbox
 echo.
-echo Deploying to CloudHub...
-mvn mule:deploy ^
+
+REM ========================================
+REM SINGLE COMMAND - BUILD + DEPLOY
+REM ========================================
+mvn clean mule:deploy ^
   -DskipTests=true ^
-  -DskipExchangeDeploy=true ^
-  -Dmule.deploy.skipExchange=true ^
-  -Dconnected.app.clientId=%connected.app.clientId% ^
-  -Dconnected.app.clientSecret=%connected.app.clientSecret% ^
-  -Dapp.name=%app.name% ^
-  -Denv.name=%env.name%
+  -Dapp.name=employee-onboarding-mcp-server ^
+  -Denv.name=Sandbox ^
+  -Dmule.verbose=true ^
+  -DskipExchangeDeploy=true
+
+if %ERRORLEVEL% equ 0 (
+    echo.
+    echo 🎉 SUCCESS! 
+    echo MCP Health: https://employee-onboarding-mcp-server.us-east-1.cloudhub.io/mcp/health
+    echo MCP Server: https://employee-onboarding-mcp-server.us-east-1.cloudhub.io/
+) else (
+    echo [ERROR] Check Runtime Manager logs
+)
 
 echo.
-echo 🎉 https://%app.name%.us-east-1.cloudhub.io/mcp/health
 pause
