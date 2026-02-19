@@ -18,7 +18,7 @@
 		<mule.maven.plugin.version>4.5.0</mule.maven.plugin.version>
 		<app.runtime>4.5.0</app.runtime>
 		<app.name>employee-onboarding-mcp-server</app.name>
-		<env.name>Development</env.name>
+		<env.name>Sandbox</env.name>
 		<!-- ENABLE Exchange for publishing -->
 		<muleDeploy>1</muleDeploy>
 	</properties>
@@ -96,9 +96,9 @@
 						<uri>https://anypoint.mulesoft.com</uri>
 						<muleVersion>4.5.0</muleVersion>
 						<server>CloudHub</server>
-						<!-- REMOVE THESE TWO LINES -->
-						<!-- <connectedAppClientId>...</connectedAppClientId> -->
-						<!-- <connectedAppClientSecret>...</connectedAppClientSecret> -->
+						<connectedAppClientId>${connected.app.client.id}</connectedAppClientId>
+						<connectedAppClientSecret>${connected.app.client.secret}</connectedAppClientSecret>
+						<businessGroupId>${anypoint.org.id}</businessGroupId>
 						<applicationName>${app.name}</applicationName>
 						<environment>${env.name}</environment>
 						<region>us-east-1</region>
