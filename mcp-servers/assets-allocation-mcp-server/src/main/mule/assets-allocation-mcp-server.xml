@@ -960,7 +960,7 @@ output application/java
 					<db:insert config-ref="H2_Database_Config">
 						<db:sql><![CDATA[
 							INSERT INTO employees (employee_id, first_name, last_name, email, phone, department_id, position, hire_date, status, location, cost_center)
-							VALUES (:employeeId, :firstName, :lastName, :email, :phone, :deptId, :position, :hireDate, 'ACTIVE', 'Office', 'EMP001')
+							VALUES (:employeeId, :firstName, :lastName, :email, :phone, :deptId, :position, CURRENT_DATE, 'ACTIVE', 'Office', 'EMP001')
 						]]></db:sql>
 						<db:input-parameters><![CDATA[#[{
 							'employeeId': vars.requestPayload.employeeId,
@@ -969,8 +969,7 @@ output application/java
 							'email': vars.requestPayload.email default (vars.requestPayload.employeeId ++ "@company.com"),
 							'phone': vars.requestPayload.phone default "+1-555-0000",
 							'deptId': vars.defaultDeptId,
-							'position': vars.requestPayload.position default "Employee",
-							'hireDate': vars.requestPayload.startDate default (now() as String {format: 'yyyy-MM-dd'})
+							'position': vars.requestPayload.position default "Employee"
 						}]]]></db:input-parameters>
 					</db:insert>
 					<logger level="INFO" message="✅ Employee created: #[vars.requestPayload.employeeId]"/>
