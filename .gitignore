@@ -1,0 +1,198 @@
+# ==============================================================================
+# Root-level .gitignore for Employee Onboarding MCP Project
+# ==============================================================================
+
+# ------------------------------------------------------------------------------ #
+# Build Artifacts and Target Directories
+# ------------------------------------------------------------------------------ #
+target/
+**/target/
+build/
+**/build/
+dist/
+**/dist/
+
+# ------------------------------------------------------------------------------ #
+# Large Files and Container Archives
+# ------------------------------------------------------------------------------ #
+# ZIP containers and archives
+.zip_container/
+**/.zip_container/
+*.zip_container
+*.zip
+*.tar.gz
+*.tar
+*.7z
+*.rar
+
+# JAR, WAR, EAR files (compiled artifacts)
+*.jar
+*.war
+*.ear
+
+# ------------------------------------------------------------------------------ #
+# Maven and Build System Files
+# ------------------------------------------------------------------------------ #
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# Maven local repository
+.m2/
+**/.m2/
+
+# Gradle
+.gradle/
+**/.gradle/
+gradle/
+**/gradle/
+gradlew
+gradlew.bat
+
+# ------------------------------------------------------------------------------ #
+# IDE and Editor Files
+# ------------------------------------------------------------------------------ #
+# VSCode
+.vscode/
+**/.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+**/.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.metadata
+.recommenders
+.settings/
+**/.settings/
+.loadpath
+.project
+.classpath
+bin/
+**/bin/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ------------------------------------------------------------------------------ #
+# Java and JVM Files
+# ------------------------------------------------------------------------------ #
+*.class
+*.log
+*.jar
+*.war
+*.ear
+*.zip
+hs_err_pid*
+replay_pid*
+
+# ------------------------------------------------------------------------------ #
+# Mule and Anypoint Studio Files
+# ------------------------------------------------------------------------------ #
+.mule/
+**/.mule/
+.tooling-project
+velocity.log
+**/velocity.log
+
+# Mule runtime logs
+logs/
+**/logs/
+
+# ------------------------------------------------------------------------------ #
+# OS and System Files
+# ------------------------------------------------------------------------------ #
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ------------------------------------------------------------------------------ #
+# Temporary Files
+# ------------------------------------------------------------------------------ #
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+tmp/**
+**/tmp/**
+temp/**
+**/temp/**
+
+# ------------------------------------------------------------------------------ #
+# Security and Configuration Files
+# ------------------------------------------------------------------------------ #
+# Environment files (may contain sensitive data)
+.env
+.env.local
+.env.*.local
+
+# Keystore files
+*.jks
+*.p12
+*.pfx
+
+# ------------------------------------------------------------------------------ #
+# Node.js and NPM (if any frontend components)
+# ------------------------------------------------------------------------------ #
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ------------------------------------------------------------------------------ #
+# Docker
+# ------------------------------------------------------------------------------ #
+.dockerignore
+
+# ------------------------------------------------------------------------------ #
+# Version Control
+# ------------------------------------------------------------------------------ #
+.git/
+.gitignore_global
+
+# ------------------------------------------------------------------------------ #
+# Application Specific Large Files
+# ------------------------------------------------------------------------------ #
+# Database files that might be large
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files that can grow large
+*.log
+logs/
+**/logs/
+
+# Cache directories
+cache/
+**/cache/
+.cache/
+**/.cache/
