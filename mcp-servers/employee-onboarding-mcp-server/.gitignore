@@ -47,6 +47,25 @@ target/
 velocity.log
 
 # ------------------------------------------------------------------------------ #
+# Large Files and Build Artifacts #
+# ------------------------------------------------------------------------------ #
+# Exclude large zip containers and build artifacts
+.zip_container/
+*.zip
+*.tar.gz
+*.tar
+# Exclude Maven build artifacts
+*.jar
+*.war
+*.ear
+# Exclude IDE temp files
+.vscode/
+.idea/
+# Exclude OS files
+Thumbs.db
+.DS_Store
+
+# ------------------------------------------------------------------------------ #
 # ACB defaults #
 # ------------------------------------------------------------------------------ #
 .tooling-project
