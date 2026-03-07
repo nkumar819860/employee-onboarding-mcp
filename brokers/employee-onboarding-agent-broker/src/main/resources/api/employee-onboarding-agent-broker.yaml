@@ -400,14 +400,18 @@ paths:
                 - employeeId
                 - step
               properties:
+                employeeId:
+                  type: string
+                  description: Employee ID for the retry operation
+                  example: EMP001
                 employeeTarget:
                   type: object
                   $ref: "#/components/schemas/OnboardingRequest"
                 step:
                   type: string
-                  enum: [profileCreation, assetAllocation, welcomeEmail, assetNotification, onboardingComplete]
+                  enum: [profile-creation, asset-allocation, welcome-email, asset-notification, onboarding-complete]
                   description: Step to retry
-                  example: assetAllocation
+                  example: asset-allocation
                 retryReason:
                   type: string
                   description: Reason for retry

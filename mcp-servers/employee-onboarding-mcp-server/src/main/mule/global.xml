@@ -136,9 +136,7 @@ output application/json
 
 	<!-- Streamable HTTP Configuration for MCP Protocol -->
 	<http:listener-config name="streamable-http-config" doc:name="Streamable HTTP Config">
-		<http:listener-connection host="${http.host}" port="${mcp.server.port}" protocol="HTTP">
-			<http:protocol-support />
-		</http:listener-connection>
+		<http:listener-connection host="${http.host}" port="${mcp.server.port}" protocol="HTTP" />
 	</http:listener-config>
 
 	<!-- HTTPS Listener Configuration for CloudHub - HARDCODED PORT -->

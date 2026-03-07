@@ -564,7 +564,7 @@ output application/java
 	<!-- ========================================================================================= -->
 
 	<flow name="health-check-implementation" doc:name="Production Health Check Implementation">
-		<set-variable variableName="healthChecks" value='#[["database", "application", "configuration"]]' doc:name="Initialize Health Checks Array"/>
+		<set-variable variableName="healthChecks" value="#[[]]" doc:name="Initialize Health Checks Array"/>
 		<set-variable variableName="overallHealthy" value="#[true]" doc:name="Initialize Overall Health Status"/>
 		
 		<!-- Sequential Health Check Processing - Ensures proper data handling -->
@@ -722,7 +722,7 @@ output application/json
 			<ee:transform doc:name="Validate and Transform Input">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	employee_id: payload.employeeId default uuid()[0 to 7],
@@ -930,7 +930,7 @@ output application/json
 			<ee:transform doc:name="Database Health Response">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "database",
@@ -950,7 +950,7 @@ output application/java
 					<ee:transform doc:name="Database Error Response">
 						<ee:message>
 							<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "database",
@@ -973,7 +973,7 @@ output application/java
 		<ee:transform doc:name="Application Health Response">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "application",
@@ -995,7 +995,7 @@ output application/java
 		<ee:transform doc:name="Configuration Health Response">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "configuration",

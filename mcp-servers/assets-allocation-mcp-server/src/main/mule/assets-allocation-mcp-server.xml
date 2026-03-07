@@ -1034,52 +1034,78 @@ output application/java
 
 	<!-- Health Check Implementation -->
 	<flow name="health-check-implementation" doc:name="Production Health Check">
-		<parallel-foreach doc:name="Parallel Health Checks">
-			<ee:transform doc:name="Health Check Tasks">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-["database", "application", "configuration"]]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			
-			<choice doc:name="Health Check Type">
-				<when expression='#[payload == "database"]'>
-					<flow-ref name="database-health-status"/>
-				</when>
-				<when expression='#[payload == "application"]'>
-					<flow-ref name="application-health-status"/>
-				</when>
-				<when expression='#[payload == "configuration"]'>
-					<flow-ref name="configuration-health-status"/>
-				</when>
-			</choice>
-		</parallel-foreach>
+		<set-variable variableName="healthChecks" value="#[[]]" doc:name="Initialize Health Checks Array"/>
+		<set-variable variableName="overallHealthy" value="#[true]" doc:name="Initialize Overall Health Status"/>
 		
-		<ee:transform doc:name="Aggregate Health Response">
+		<!-- Sequential Health Check Processing - Ensures proper data handling -->
+		<try doc:name="Try Database Health Check">
+			<flow-ref name="database-health-status" doc:name="Database Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Database Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Database health check failed: #[error.description]" doc:name="Database Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'database', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Database Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<try doc:name="Try Application Health Check">
+			<flow-ref name="application-health-status" doc:name="Application Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Application Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Application health check failed: #[error.description]" doc:name="Application Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'application', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Application Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<try doc:name="Try Configuration Health Check">
+			<flow-ref name="configuration-health-status" doc:name="Configuration Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Configuration Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Configuration health check failed: #[error.description]" doc:name="Configuration Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'configuration', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Configuration Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<ee:transform doc:name="Aggregate Health Response with Sequential Processing">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	status: if (payload filter ($.healthy == false) != []) "DEGRADED" else "HEALTHY",
+	status: if (vars.overallHealthy) "HEALTHY" else "DEGRADED",
 	service: "assets-allocation-mcp-server",  
 	version: "2.0.4",                        
 	timestamp: now(),
 	environment: "Sandbox",                  
-	checks: payload,
+	checks: vars.healthChecks,
+	summary: {
+		total: sizeOf(vars.healthChecks),
+		healthy: sizeOf(vars.healthChecks filter $.healthy),
+		unhealthy: sizeOf(vars.healthChecks filter (not $.healthy)),
+		processingMode: "sequential"
+	},
 	uptime: (now() - |2024-01-01T00:00:00|) as Number {unit: "seconds"},
 	features: {
 		mockMode: "false",
 		databaseRequired: "true", 
 		auditEnabled: "true"
-		}
+	}
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		
-		<logger level="INFO" message="Health check completed - Status: #[payload.status]"/>
+		<logger level="INFO" message="Health check completed sequentially - Status: #[payload.status], Checks: #[payload.summary.total]"/>
 	</flow>
 
 	<!-- MCP Server Info Implementation -->
@@ -1989,21 +2015,28 @@ output application/json
 				</when>
 				<otherwise>
 					<logger level="WARN" message='Unknown database strategy: ${db.strategy}' />
+					<set-variable variableName="dbType" value="Unknown"/>
+					<set-variable variableName="mockPayload" value='[{"asset_count": 0}]'/>
+					<ee:transform doc:name="Set Mock Payload">
+						<ee:message>
+							<ee:set-payload><![CDATA[#[vars.mockPayload]]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
 				</otherwise>
 			</choice>
 			
 			<ee:transform doc:name="Database Health Response">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "database",
 	healthy: true,
 	status: "UP",
 	details: {
-		"type": vars.dbType,
-		assetCount: payload[0].asset_count,
+		"type": vars.dbType default "H2",
+		assetCount: if (payload is Array and sizeOf(payload) > 0) payload[0].asset_count else 0,
 		connection: "active"
 	}
 }]]></ee:set-payload>
@@ -2012,17 +2045,18 @@ output application/java
 			
 			<error-handler>
 				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Database health check failed: #[error.description]"/>
 					<ee:transform doc:name="Database Error Response">
 						<ee:message>
 							<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+output application/json
 ---
 {
 	name: "database",
 	healthy: false,
 	status: "DOWN",
 	details: {
-		error: error.description,
+		error: error.description default "Database connection failed",
 		"type": "unavailable"
 	}
 }]]></ee:set-payload>
@@ -2035,54 +2069,102 @@ output application/java
 
 	<!-- Application Health Status -->
 	<flow name="application-health-status" doc:name="Application Health Check">
-		<set-variable variableName="serverVersion" value="${mcp.server.version}" doc:name="Set Server Version"/>
-		<set-variable variableName="environment" value="${env}" doc:name="Set Environment"/>
-		
-		<ee:transform doc:name="Application Health Response">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+		<try doc:name="Get Application Health">
+			<set-variable variableName="serverVersion" value="${mcp.server.version}" doc:name="Set Server Version"/>
+			<set-variable variableName="environment" value="${env}" doc:name="Set Environment"/>
+			
+			<ee:transform doc:name="Application Health Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
 {
 	name: "application",
 	healthy: true,
 	status: "UP",
 	details: {
-		version: vars.serverVersion,
-		environment: vars.environment,
-		memory: java!java::lang::Runtime::getRuntime().freeMemory(),
+		version: vars.serverVersion default "2.0.4",
+		environment: vars.environment default "sandbox",
+		memory: java!java::lang::Runtime::getRuntime().freeMemory() as String default "available",
 		uptime: "running"
 	}
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+				</ee:message>
+			</ee:transform>
+			
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Application health check failed: #[error.description]"/>
+					<ee:transform doc:name="Application Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: "application",
+	healthy: false,
+	status: "DOWN",
+	details: {
+		error: error.description default "Application health check failed",
+		version: "unknown"
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
 	</flow>
 
 	<!-- Configuration Health Status -->
 	<flow name="configuration-health-status" doc:name="Configuration Health Check">
-		<set-variable variableName="dbStrategy" value="${db.strategy}" doc:name="Set DB Strategy"/>
-		<set-variable variableName="mockMode" value="${mcp.features.mock.enabled}" doc:name="Set Mock Mode"/>
-		<set-variable variableName="auditEnabled" value="${mcp.features.audit.enabled}" doc:name="Set Audit Enabled"/>
-		<set-variable variableName="cacheEnabled" value="${cache.enabled}" doc:name="Set Cache Enabled"/>
-		
-		<ee:transform doc:name="Configuration Health Response">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
+		<try doc:name="Get Configuration Health">
+			<set-variable variableName="dbStrategy" value="${db.strategy}" doc:name="Set DB Strategy"/>
+			<set-variable variableName="mockMode" value="${mcp.features.mock.enabled}" doc:name="Set Mock Mode"/>
+			<set-variable variableName="auditEnabled" value="${mcp.features.audit.enabled}" doc:name="Set Audit Enabled"/>
+			<set-variable variableName="cacheEnabled" value="${cache.enabled}" doc:name="Set Cache Enabled"/>
+			
+			<ee:transform doc:name="Configuration Health Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
 ---
 {
 	name: "configuration",
 	healthy: true,
 	status: "UP",
 	details: {
-		database: vars.dbStrategy,
-		mockMode: vars.mockMode,
-		auditEnabled: vars.auditEnabled,
-		cacheEnabled: vars.cacheEnabled
+		database: vars.dbStrategy default "h2",
+		mockMode: vars.mockMode default "false",
+		auditEnabled: vars.auditEnabled default "true",
+		cacheEnabled: vars.cacheEnabled default "false"
 	}
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+				</ee:message>
+			</ee:transform>
+			
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Configuration health check failed: #[error.description]"/>
+					<ee:transform doc:name="Configuration Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: "configuration",
+	healthy: false,
+	status: "DOWN",
+	details: {
+		error: error.description default "Configuration health check failed",
+		database: "unknown"
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
 	</flow>
 
 

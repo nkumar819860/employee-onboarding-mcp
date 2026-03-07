@@ -493,6 +493,64 @@ output application/java
 				doc:name="Orchestration Completed" />
 
 			<error-handler>
+				<on-error-propagate type="HTTP:INTERNAL_SERVER_ERROR">
+					<ee:transform doc:name="Prepare HTTP 500 Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "error",
+  message: "Employee onboarding orchestration failed - MCP Server Internal Error",
+  error: error.description,
+  errorType: "HTTP_INTERNAL_SERVER_ERROR",
+  httpStatusCode: 500,
+  employeeEmail: vars.employeeData.email,
+  failedAt: "MCP Server Request (Internal Server Error)",
+  mcpServer: if (error.description contains "assets-allocation") "Assets Allocation MCP"
+    else if (error.description contains "employee-onboarding") "Employee Onboarding MCP"
+    else if (error.description contains "notification") "Notification MCP"
+    else "Unknown MCP Server",
+  troubleshooting: {
+    possibleCauses: [
+      "MCP server health check failure",
+      "Database connectivity issues on MCP server",
+      "Resource allocation conflicts",
+      "Invalid data format or missing required fields"
+    ],
+    recommendedActions: [
+      "Check MCP server health endpoints",
+      "Verify database connectivity",
+      "Review request payload format",
+      "Retry operation after a brief delay"
+    ]
+  },
+  startTime: vars.onboardingStartTime as String {format: 'yyyy-MM-dd HH:mm:ss'},
+  errorTime: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
+  timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
+}
+]]></ee:set-payload>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="httpStatus">500
+							</ee:set-variable>
+							<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
+output application/java
+---
+{
+  "Access-Control-Allow-Origin": vars.origin,
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
+  "Access-Control-Max-Age": "3600"
+}
+]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<logger level="ERROR"
+						message="MCP Server Internal Error (500) during onboarding orchestration: Employee=#[vars.employeeData.email], Error=#[error.description], Server=#[if (error.description contains 'assets-allocation') 'Assets Allocation MCP' else if (error.description contains 'employee-onboarding') 'Employee Onboarding MCP' else if (error.description contains 'notification') 'Notification MCP' else 'Unknown MCP Server']"
+						doc:name="HTTP 500 Error" />
+				</on-error-propagate>
+				
 				<on-error-propagate type="HTTP:*">
 					<ee:transform doc:name="Prepare HTTP Error Response">
 						<ee:message>
@@ -501,8 +559,9 @@ output application/json
 ---
 {
   status: "error",
-  message: "Employee onboarding orchestration failed",
+  message: "Employee onboarding orchestration failed - HTTP Error",
   error: error.description,
+  errorType: error.'type',
   employeeEmail: vars.employeeData.email,
   failedAt: "HTTP Request to MCP Server",
   startTime: vars.onboardingStartTime as String {format: 'yyyy-MM-dd HH:mm:ss'},
@@ -527,7 +586,7 @@ output application/java
 						</ee:variables>
 					</ee:transform>
 					<logger level="ERROR"
-						message="Onboarding orchestration failed: #[error.description]"
+						message="HTTP Error during onboarding orchestration: #[error.description], Type: #[error.'type']"
 						doc:name="HTTP Error" />
 				</on-error-propagate>
 
