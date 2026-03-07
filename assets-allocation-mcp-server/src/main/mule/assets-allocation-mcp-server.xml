@@ -847,9 +847,9 @@ output application/java
 	managerEmail: payload.managerEmail default "",
 	companyName: payload.companyName default "",
 	testMode: payload.testMode default false,
-	// Enhanced asset handling for Agent Broker complex objects
-	assets: if (payload.assets != null and payload.assets is Array) 
-		(if (sizeOf(payload.assets) > 0 and payload.assets[0] is Object) 
+	// Enhanced asset handling for Agent Broker complex objects with null safety
+	assets: if (payload.assets != null and payload.assets is Array and sizeOf(payload.assets) > 0) 
+		(if (payload.assets[0] is Object) 
 			// Handle complex asset objects from Agent Broker
 			payload.assets map (asset, index) -> (
 				// Extract type field, or use assetType field as fallback
@@ -886,9 +886,9 @@ output application/java
 	managerEmail: payload.managerEmail default "",
 	companyName: payload.companyName default "",
 	testMode: payload.testMode default false,
-	// Enhanced asset handling for Agent Broker complex objects
-	assets: if (payload.assets != null and payload.assets is Array) 
-		(if (sizeOf(payload.assets) > 0 and payload.assets[0] is Object) 
+	// Enhanced asset handling for Agent Broker complex objects with null safety
+	assets: if (payload.assets != null and payload.assets is Array and sizeOf(payload.assets) > 0) 
+		(if (payload.assets[0] is Object) 
 			// Handle complex asset objects from Agent Broker
 			payload.assets map (asset, index) -> (
 				// Extract type field, or use assetType field as fallback
@@ -940,9 +940,11 @@ output application/java
 		</try>
 		
 		<!-- Allocate each requested asset from H2 database with JSON object support -->
-		<foreach collection="#[payload.assets]" counterVariableName="assetIndex">
-			<set-variable variableName="currentAssetType" value="#[payload]" />
-			<set-variable variableName="currentOriginalAsset" value="#[if (sizeOf(vars.requestPayload.originalAssets) > 0) vars.requestPayload.originalAssets[vars.assetIndex] else null]" />
+		<choice>
+			<when expression="#[payload.assets != null and sizeOf(payload.assets) > 0]">
+				<foreach collection="#[payload.assets]" counterVariableName="assetIndex">
+					<set-variable variableName="currentAssetType" value="#[payload]" />
+					<set-variable variableName="currentOriginalAsset" value="#[if (vars.requestPayload.originalAssets != null and sizeOf(vars.requestPayload.originalAssets) > vars.assetIndex) vars.requestPayload.originalAssets[vars.assetIndex] else null]" />
 			
 			<!-- Find available asset in H2 -->
 			<db:select config-ref="H2_Database_Config">
@@ -1034,7 +1036,13 @@ output application/java
 					<logger level="WARN" message="⚠️ No available H2 assets of type: #[vars.currentAssetType]" />
 				</otherwise>
 			</choice>
-		</foreach>
+				</foreach>
+			</when>
+			<otherwise>
+				<logger level="WARN" message="⚠️ No assets provided in payload or payload.assets is null"/>
+				<set-variable variableName="allocatedAssets" value="#[if (vars.allocatedAssets != null) vars.allocatedAssets else []]"/>
+			</otherwise>
+		</choice>
 		
 		<!-- Return H2 success response -->
 		<ee:transform doc:name="H2 Success Response">
@@ -1045,10 +1053,10 @@ output application/json
 {
 	success: true,
 	message: "Assets allocated successfully via H2 embedded database" ++ 
-		(if (sizeOf(payload.originalAssets) > 0) " - Complex asset objects from Agent Broker processed" else ""),
+		(if (payload.originalAssets != null and sizeOf(payload.originalAssets) > 0) " - Complex asset objects from Agent Broker processed" else ""),
 	database: vars.databaseUsed,
 	employeeId: payload.employeeId,
-	employeeName: payload.firstName ++ ' ' ++ payload.lastName,
+	employeeName: (payload.firstName default "") ++ ' ' ++ (payload.lastName default ""),
 	// Return assets in the format expected by onboarding broker (JSON objects)
 	allocatedAssets: vars.allocatedAssets map (asset, index) -> {
 		'type': asset.category,
@@ -1065,11 +1073,11 @@ output application/json
 	},
 	allocationCount: sizeOf(vars.allocatedAssets),
 	// Include tracking of original complex assets if they were provided
-	originalAssetObjects: if (sizeOf(payload.originalAssets) > 0) payload.originalAssets else null,
+	originalAssetObjects: if (payload.originalAssets != null and sizeOf(payload.originalAssets) > 0) payload.originalAssets else null,
 	assetTypesProcessed: payload.assets,
 	processingInfo: {
-		agentBrokerCompatible: sizeOf(payload.originalAssets) > 0,
-		complexObjectsHandled: sizeOf(payload.originalAssets),
+		agentBrokerCompatible: payload.originalAssets != null and sizeOf(payload.originalAssets) > 0,
+		complexObjectsHandled: if (payload.originalAssets != null) sizeOf(payload.originalAssets) else 0,
 		assetTypesExtracted: payload.assets,
 		brokerFormatResponse: true
 	},
@@ -1159,7 +1167,7 @@ output application/json
 	statistics: {
 		available: sizeOf(payload filter ($.status == 'AVAILABLE')),
 		allocated: sizeOf(payload filter ($.status == 'ALLOCATED')),
-		categories: payload distinctBy $.category_name pluck $.category_name
+		categories: (payload distinctBy $.category_name) map $.category_name
 	},
 	timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
 	mockMode: vars.databaseUsed == "mock"
@@ -1201,7 +1209,7 @@ output application/json
 	database: vars.databaseUsed,
 	assets: payload,
 	assetCount: sizeOf(payload),
-	categories: payload distinctBy $.category_name pluck $.category_name,
+	categories: (payload distinctBy $.category_name) map $.category_name,
 	timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
 	mockMode: vars.databaseUsed == "mock"
 }]]></ee:set-payload>
@@ -1247,7 +1255,7 @@ output application/json
 	employeeId: vars.employeeId,
 	assets: payload,
 	assetCount: sizeOf(payload),
-	categories: payload distinctBy $.category_name pluck $.category_name,
+	categories: (payload distinctBy $.category_name) map $.category_name,
 	timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
 	mockMode: vars.databaseUsed == "mock"
 }]]></ee:set-payload>
