@@ -9,34 +9,37 @@
 	xmlns:http="http://www.mulesoft.org/schema/mule/http"
 	xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets"
 	xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
         http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
         http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
         http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
         http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd
-	http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+        http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 
-	
+
+
 	<!-- Load Properties Configuration -->
-	<configuration-properties file="config.properties" doc:name="Configuration properties"/>
-	
+	<configuration-properties
+		file="config.properties" doc:name="Configuration properties" />
+
 	<!-- ================================================================== -->
 	<!-- APIKIT ROUTER CONFIGURATION - CONTRACT-FIRST API DEVELOPMENT -->
 	<!-- ================================================================== -->
-	
-	<apikit:config name="assets-allocation-mcp-api-config" 
-		api="api/assets-allocation-mcp-server.yaml" 
-		outboundHeadersMapName="outboundHeaders" 
-		httpStatusVarName="httpStatus" 
-		doc:name="APIKit Router Configuration"/>
-	
+
+	<apikit:config name="assets-allocation-mcp-api-config"
+		api="api/assets-allocation-mcp-server.yaml"
+		outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" doc:name="APIKit Router Configuration" />
+
 	<!-- Global Error Handler for Production Reliability -->
-	<error-handler name="Global_Error_Handler" doc:name="Global Production Error Handler">
-		<on-error-propagate type="DB:CONNECTIVITY" logException="true" enableNotifications="true">
-			<logger level="ERROR" message="Database connectivity error - switching to mock mode: #[error.description]"/>
+	<error-handler name="Global_Error_Handler"
+		doc:name="Global Production Error Handler">
+		<on-error-propagate type="DB:CONNECTIVITY"
+			logException="true" enableNotifications="true">
+			<logger level="ERROR"
+				message="Database connectivity error - switching to mock mode: #[error.description]" />
 			<ee:transform>
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
@@ -55,8 +58,10 @@ output application/json
 				</ee:variables>
 			</ee:transform>
 		</on-error-propagate>
-		<on-error-propagate type="TIMEOUT" logException="true">
-			<logger level="WARN" message="Operation timeout - fallback to cached/mock data: #[error.description]"/>
+		<on-error-propagate type="TIMEOUT"
+			logException="true">
+			<logger level="WARN"
+				message="Operation timeout - fallback to cached/mock data: #[error.description]" />
 			<ee:transform>
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
@@ -75,7 +80,8 @@ output application/json
 			</ee:transform>
 		</on-error-propagate>
 		<on-error-propagate type="ANY" logException="true">
-			<logger level="ERROR" message="Unexpected error in MCP server: #[error.description]"/>
+			<logger level="ERROR"
+				message="Unexpected error in MCP server: #[error.description]" />
 			<ee:transform>
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
@@ -97,7 +103,8 @@ output application/json
 	</error-handler>
 
 	<!-- Configure Global Error Handler -->
-	<configuration defaultErrorHandler-ref="Global_Error_Handler" />
+	<configuration
+		defaultErrorHandler-ref="Global_Error_Handler" />
 
 	<!-- ================================================================== -->
 	<!-- DATABASE CONFIGURATIONS - PRODUCTION GRADE WITH CONNECTION POOLING -->
@@ -105,22 +112,24 @@ output application/json
 
 
 	<!-- H2 Configuration with Connection Pooling and Script Initialization -->
-	<db:config name="H2_Database_Config" doc:name="H2 Database Config with Scripts">
-		<db:generic-connection 
-			url="${db.h2.url}" 
-			driverClassName="${db.h2.driverClassName}" 
-			user="${db.h2.username}" 
+	<db:config name="H2_Database_Config"
+		doc:name="H2 Database Config with Scripts">
+		<db:generic-connection url="${db.h2.url}"
+			driverClassName="${db.h2.driverClassName}" user="${db.h2.username}"
 			password="${db.h2.password}">
-			<db:pooling-profile 
-				maxPoolSize="${db.h2.maxPoolSize}" 
-				minPoolSize="${db.h2.minPoolSize}" 
-				acquireIncrement="1" 
-				preparedStatementCacheSize="10"/>
+			<db:pooling-profile
+				maxPoolSize="${db.h2.maxPoolSize}"
+				minPoolSize="${db.h2.minPoolSize}" acquireIncrement="1"
+				preparedStatementCacheSize="10" />
 			<db:column-types>
-				<db:column-type typeName="TIMESTAMP" id="93" className="java.sql.Timestamp"/>
-				<db:column-type typeName="DATE" id="91" className="java.sql.Date"/>
-				<db:column-type typeName="VARCHAR" id="12" className="java.lang.String"/>
-				<db:column-type typeName="DECIMAL" id="3" className="java.math.BigDecimal"/>
+				<db:column-type typeName="TIMESTAMP" id="93"
+					className="java.sql.Timestamp" />
+				<db:column-type typeName="DATE" id="91"
+					className="java.sql.Date" />
+				<db:column-type typeName="VARCHAR" id="12"
+					className="java.lang.String" />
+				<db:column-type typeName="DECIMAL" id="3"
+					className="java.math.BigDecimal" />
 			</db:column-types>
 		</db:generic-connection>
 	</db:config>
@@ -131,13 +140,18 @@ output application/json
 	<!-- ================================================================== -->
 
 	<!-- HTTP Listener for Docker/Development Environment -->
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config">
-		<http:listener-connection host="${http.host}" port="${http.port}" protocol="HTTP"/>
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config">
+		<http:listener-connection host="${http.host}"
+			port="${http.port}" protocol="HTTP" />
 	</http:listener-config>
 
-		<!-- HTTPS Listener Configuration for CloudHub - HARDCODED PORT -->
-	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTPS Listener config" doc:id="6d9e9801-de62-4c3d-942a-a3ecfc98d115">
-		<http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
+	<!-- HTTPS Listener Configuration for CloudHub - HARDCODED PORT -->
+	<http:listener-config name="HTTPS_Listener_config"
+		doc:name="HTTPS Listener config"
+		doc:id="6d9e9801-de62-4c3d-942a-a3ecfc98d115">
+		<http:listener-connection host="0.0.0.0"
+			port="8082" protocol="HTTPS">
 			<tls:context name="tls-context">
 				<tls:key-store type="jks" path="server.jks"
 					keyPassword="MULEPASS" password="MULEPASS" alias="mule-server" />
@@ -150,10 +164,12 @@ output application/json
 	<!-- ================================================================== -->
 
 	<!-- HTTP Request Configuration for External Services -->
-	<http:request-config name="External_HTTP_Config" doc:name="External Service Config">
+	<http:request-config name="External_HTTP_Config"
+		doc:name="External Service Config">
 		<http:request-connection>
 			<http:client-socket-properties>
-				<sockets:tcp-client-socket-properties connectionTimeout="10000" clientTimeout="30000"/>
+				<sockets:tcp-client-socket-properties
+					connectionTimeout="10000" clientTimeout="30000" />
 			</http:client-socket-properties>
 		</http:request-connection>
 	</http:request-config>
@@ -163,184 +179,309 @@ output application/json
 	<!-- ================================================================== -->
 
 	<!-- Database Health Check Flow - Environment Aware -->
-	<flow name="database-health-check" doc:name="Database Health Monitor">
+	<flow name="database-health-check"
+		doc:name="Database Health Monitor">
 		<scheduler doc:name="Health Check Scheduler">
 			<scheduling-strategy>
-				<fixed-frequency frequency="30" timeUnit="SECONDS" startDelay="10"/>
+				<fixed-frequency frequency="30" timeUnit="SECONDS"
+					startDelay="10" />
 			</scheduling-strategy>
 		</scheduler>
-		
+
 		<choice doc:name="Health Check Enabled?">
-			<when expression="${db.healthcheck.enabled}">
-				<logger level="INFO" message="Database health check - Strategy: ${db.strategy} | Environment: ${env}"/>
-				
+			<when expression="#[p('db.healthcheck.enabled')]">
+				<logger level="INFO"
+					message="Database health check - Strategy: ${db.strategy} | Environment: ${env}" />
+
 				<!-- Environment-Aware Database Selection -->
 				<choice doc:name="Select Database Based on Strategy">
 					<!-- H2 Strategy: Cloud/Local environments -->
-					<when expression='#["h2" == "${db.strategy}"]'>
+					<when expression='#[p("db.strategy") == "h2"]'>
 						<try doc:name="Test H2 Database">
 							<db:select config-ref="H2_Database_Config">
 								<db:sql>SELECT 1 as health_check, CURRENT_TIMESTAMP as check_time</db:sql>
 							</db:select>
-							<set-variable variableName="databaseHealthy" value="true"/>
-							<logger level="DEBUG" message="H2 database health check: PASSED"/>
-							
+							<set-variable variableName="databaseHealthy"
+								value="true" />
+							<logger level="DEBUG"
+								message="H2 database health check: PASSED" />
+
 							<error-handler>
 								<on-error-continue type="DB:*">
-									<set-variable variableName="databaseHealthy" value="false"/>
-									<logger level="ERROR" message="H2 database health check FAILED: #[error.description]"/>
+									<set-variable variableName="databaseHealthy"
+										value="false" />
+									<logger level="ERROR"
+										message="H2 database health check FAILED: #[error.description]" />
 								</on-error-continue>
 							</error-handler>
 						</try>
 					</when>
-					
-					
+
+
 					<!-- Auto Strategy: Use H2 for all environments -->
-					<when expression='#["auto" == "${db.strategy}"]'>
+					<when expression='#["auto" == p("db.strategy")]'>
 						<try doc:name="Test H2 Database (Auto)">
 							<db:select config-ref="H2_Database_Config">
 								<db:sql>SELECT 1 as health_check, CURRENT_TIMESTAMP as check_time</db:sql>
 							</db:select>
-							<set-variable variableName="databaseHealthy" value="true"/>
-							<logger level="DEBUG" message="H2 database health check (auto): PASSED"/>
-							
+							<set-variable variableName="databaseHealthy"
+								value="true" />
+							<logger level="DEBUG"
+								message="H2 database health check (auto): PASSED" />
+
 							<error-handler>
 								<on-error-continue type="DB:*">
-									<set-variable variableName="databaseHealthy" value="false"/>
-									<logger level="ERROR" message="H2 database health check failed: #[error.description]"/>
+									<set-variable variableName="databaseHealthy"
+										value="false" />
+									<logger level="ERROR"
+										message="H2 database health check failed: #[error.description]" />
 								</on-error-continue>
 							</error-handler>
 						</try>
 					</when>
-					
+
 					<!-- Unknown strategy -->
 					<otherwise>
-						<logger level="WARN" message='Unknown database strategy: ${db.strategy}. Skipping health check.'/>
-						<set-variable variableName="databaseHealthy" value="false"/>
+						<logger level="WARN"
+							message='Unknown database strategy: ${db.strategy}. Skipping health check.' />
+						<set-variable variableName="databaseHealthy"
+							value="false" />
 					</otherwise>
 				</choice>
 			</when>
 			<otherwise>
-				<logger level="DEBUG" message="Database health check disabled"/>
-				<set-variable variableName="databaseHealthy" value="true"/>
+				<logger level="DEBUG"
+					message="Database health check disabled" />
+				<set-variable variableName="databaseHealthy"
+					value="true" />
 			</otherwise>
 		</choice>
 	</flow>
 
 	<!-- Database Initialization Flow - Single Script Approach -->
-	<flow name="database-initialization-global" doc:name="Database Initialization Flow Global" initialState="started">
+	<flow name="database-initialization-global"
+		doc:name="Database Initialization Flow Global" initialState="started">
 		<scheduler doc:name="Database Init Scheduler">
 			<scheduling-strategy>
-				<fixed-frequency frequency="86400" timeUnit="SECONDS" startDelay="2"/>
+				<fixed-frequency frequency="86400"
+					timeUnit="SECONDS" startDelay="2" />
 			</scheduling-strategy>
 		</scheduler>
-		
+
 		<choice doc:name="Database Initialization Enabled?">
-			<when expression="${db.initialization.enabled}">
-				<logger level="INFO" message="Database initialization enabled - checking if database needs setup"/>
-				
+			<when expression="#[p('db.initialization.enabled')]">
+				<logger level="INFO"
+					message="Database initialization enabled - checking if database needs setup" />
+
 				<try doc:name="Check Database State">
-					<!-- Test if database is already initialized -->
-					<db:select config-ref="H2_Database_Config" doc:name="Check Init Status">
-						<db:sql>SELECT COUNT(*) as init_count FROM departments WHERE name = '_INIT_COMPLETE_'</db:sql>
+					<!-- First ensure database connection is working -->
+					<db:select config-ref="H2_Database_Config"
+						doc:name="Test Database Connection">
+						<db:sql>SELECT 1 as connection_test</db:sql>
 					</db:select>
+					<logger level="DEBUG"
+						message="Database connection successful" />
+					<set-variable variableName="needsInitialization" value="#[true]" />
+
+					<!-- Use the manual table creation approach that works in assets-allocation-mcp-server.xml -->
+					<logger level="INFO"
+						message="Database needs initialization - using built-in table creation" />
 					
-					<choice doc:name="Database Already Initialized?">
-						<when expression="#[payload[0].init_count > 0]">
-							<logger level="INFO" message="Database already initialized - skipping script execution"/>
-						</when>
-						<otherwise>
-							<logger level="INFO" message="Database not initialized - executing init-script.sql"/>
-							<file:read path="src/main/resources/init-script.sql" doc:name="Read Init Script"/>
-							
-							<!-- Split script into individual statements and execute them -->
-							<set-variable variableName="sqlStatements" value="#[payload splitBy(';\n') filter ($ != null and sizeOf(trim($)) > 0)]"/>
-							
-							<foreach doc:name="Execute SQL Statements">
-								<choice doc:name="Skip Comments and Empty Lines">
-									<when expression="#[not (payload startsWith '--') and sizeOf(trim(payload)) > 0]">
-										<try doc:name="Execute SQL Statement">
-											<db:execute-ddl config-ref="H2_Database_Config" doc:name="Execute DDL">
-												<db:sql>#[payload]</db:sql>
-											</db:execute-ddl>
-											<logger level="DEBUG" message="Executed SQL: #[payload[0..50]]..."/>
-											
-											<error-handler>
-												<on-error-continue type="DB:*">
-													<logger level="WARN" message="SQL execution warning (continuing): #[error.description] for statement: #[payload[0..50]]..."/>
-												</on-error-continue>
-											</error-handler>
-										</try>
-									</when>
-								</choice>
-							</foreach>
-							
-							<logger level="INFO" message="Database initialization completed successfully"/>
-						</otherwise>
-					</choice>
-					
-					<error-handler>
-						<on-error-continue type="DB:*">
-							<logger level="INFO" message="Database tables don't exist - executing full initialization script"/>
-							
-							<!-- Read and execute the initialization script -->
-							<file:read path="src/main/resources/init-script.sql" doc:name="Read Init Script"/>
-							
-							<!-- Split script into individual statements -->
-							<set-variable variableName="sqlStatements" value="#[payload splitBy(';\n') filter ($ != null and sizeOf(trim($)) > 0)]"/>
-							
-							<foreach doc:name="Execute SQL Statements">
-								<choice doc:name="Skip Comments and Empty Lines">
-									<when expression="#[not (payload startsWith '--') and sizeOf(trim(payload)) > 0]">
-										<try doc:name="Execute SQL Statement">
-											<db:execute-ddl config-ref="H2_Database_Config" doc:name="Execute DDL">
-												<db:sql>#[payload]</db:sql>
-											</db:execute-ddl>
-											<logger level="DEBUG" message="Executed SQL: #[payload[0..50]]..."/>
-											
-											<error-handler>
-												<on-error-continue type="DB:*">
-													<logger level="WARN" message="SQL execution warning (continuing): #[error.description] for statement: #[payload[0..50]]..."/>
-												</on-error-continue>
-											</error-handler>
-										</try>
-									</when>
-								</choice>
-							</foreach>
-							
-							<logger level="INFO" message="Database initialization completed successfully"/>
-						</on-error-continue>
-					</error-handler>
+					<!-- Create tables step by step without file dependencies -->
+					<try doc:name="Create Database Tables">
+						<!-- Create Departments -->
+						<db:execute-ddl config-ref="H2_Database_Config" doc:name="Create Departments Table">
+							<db:sql><![CDATA[
+								CREATE TABLE IF NOT EXISTS departments (
+									id INT AUTO_INCREMENT PRIMARY KEY,
+									name VARCHAR(100) NOT NULL UNIQUE,
+									description VARCHAR(255),
+									manager_name VARCHAR(100),
+									budget_allocation DECIMAL(12,2) DEFAULT 0.00,
+									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+									updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+								)
+							]]></db:sql>
+						</db:execute-ddl>
+						
+						<!-- Create Asset Categories -->
+						<db:execute-ddl config-ref="H2_Database_Config" doc:name="Create Asset Categories Table">
+							<db:sql><![CDATA[
+								CREATE TABLE IF NOT EXISTS asset_categories (
+									id INT AUTO_INCREMENT PRIMARY KEY,
+									category_name VARCHAR(50) NOT NULL UNIQUE,
+									description VARCHAR(255),
+									requires_approval BOOLEAN DEFAULT FALSE,
+									max_allocation_per_employee INT DEFAULT 1,
+									depreciation_years INT DEFAULT 3,
+									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+									updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+								)
+							]]></db:sql>
+						</db:execute-ddl>
+						
+						<!-- Create Employees -->
+						<db:execute-ddl config-ref="H2_Database_Config" doc:name="Create Employees Table">
+							<db:sql><![CDATA[
+								CREATE TABLE IF NOT EXISTS employees (
+									id INT AUTO_INCREMENT PRIMARY KEY,
+									employee_id VARCHAR(20) NOT NULL UNIQUE,
+									first_name VARCHAR(50) NOT NULL,
+									last_name VARCHAR(50) NOT NULL,
+									email VARCHAR(100) NOT NULL UNIQUE,
+									phone VARCHAR(20),
+									department_id INT,
+									position VARCHAR(100),
+									hire_date DATE DEFAULT CURRENT_DATE,
+									termination_date DATE,
+									status VARCHAR(20) DEFAULT 'ACTIVE',
+									manager_id INT,
+									location VARCHAR(100),
+									cost_center VARCHAR(50),
+									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+									updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+								)
+							]]></db:sql>
+						</db:execute-ddl>
+						
+						<!-- Create Assets -->
+						<db:execute-ddl config-ref="H2_Database_Config" doc:name="Create Assets Table">
+							<db:sql><![CDATA[
+								CREATE TABLE IF NOT EXISTS assets (
+									id INT AUTO_INCREMENT PRIMARY KEY,
+									asset_tag VARCHAR(50) NOT NULL UNIQUE,
+									asset_name VARCHAR(100) NOT NULL,
+									category_id INT NOT NULL,
+									brand VARCHAR(50),
+									model VARCHAR(100),
+									serial_number VARCHAR(100) UNIQUE,
+									purchase_date DATE DEFAULT CURRENT_DATE,
+									purchase_cost DECIMAL(10,2) DEFAULT 0.00,
+									warranty_expiry DATE,
+									status VARCHAR(20) DEFAULT 'AVAILABLE',
+									condition_status VARCHAR(20) DEFAULT 'NEW',
+									location VARCHAR(100),
+									vendor VARCHAR(100),
+									specifications VARCHAR(2000),
+									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+									updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+								)
+							]]></db:sql>
+						</db:execute-ddl>
+						
+						<!-- Create Asset Allocations -->
+						<db:execute-ddl config-ref="H2_Database_Config" doc:name="Create Asset Allocations Table">
+							<db:sql><![CDATA[
+								CREATE TABLE IF NOT EXISTS asset_allocations (
+									id INT AUTO_INCREMENT PRIMARY KEY,
+									asset_id INT NOT NULL,
+									employee_id INT NOT NULL,
+									allocated_date DATE DEFAULT CURRENT_DATE,
+									expected_return_date DATE,
+									actual_return_date DATE,
+									allocation_status VARCHAR(20) DEFAULT 'ALLOCATED',
+									allocation_reason VARCHAR(255),
+									approved_by VARCHAR(100),
+									approval_date DATE DEFAULT CURRENT_DATE,
+									return_condition VARCHAR(20),
+									notes VARCHAR(2000),
+									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+									updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+								)
+							]]></db:sql>
+						</db:execute-ddl>
+						
+						<logger level="INFO" message="Database tables created successfully" />
+						
+						<!-- Insert basic sample data -->
+						<db:insert config-ref="H2_Database_Config" doc:name="Insert Sample Data">
+							<db:sql><![CDATA[
+								INSERT INTO departments (name, description, manager_name, budget_allocation) VALUES
+								('IT', 'Information Technology Department', 'John Smith', 500000.00),
+								('HR', 'Human Resources Department', 'Jane Doe', 200000.00),
+								('Engineering', 'Software Engineering Department', 'Bob Wilson', 750000.00),
+								('Marketing', 'Marketing Department', 'Alice Brown', 300000.00),
+								('Sales', 'Sales Department', 'Charlie Green', 400000.00),
+								('_INIT_COMPLETE_', 'H2 database initialization completed successfully', 'System', 0.00)
+							]]></db:sql>
+						</db:insert>
+						
+						<db:insert config-ref="H2_Database_Config" doc:name="Insert Asset Categories">
+							<db:sql><![CDATA[
+								INSERT INTO asset_categories (category_name, description, max_allocation_per_employee, requires_approval) VALUES
+								('LAPTOP', 'Corporate Laptops and Portable Computers', 2, FALSE),
+								('ID_CARD', 'Employee Identification Cards', 1, TRUE),
+								('MOBILE_PHONE', 'Corporate Mobile Phones and Devices', 1, TRUE),
+								('MONITOR', 'External Monitors and Displays', 2, FALSE),
+								('HEADSET', 'Audio Headsets and Communication Devices', 1, FALSE)
+							]]></db:sql>
+						</db:insert>
+						
+						<!-- Insert sample assets -->
+						<db:insert config-ref="H2_Database_Config" doc:name="Insert Sample Assets">
+							<db:sql><![CDATA[
+								INSERT INTO assets (asset_tag, asset_name, category_id, brand, model, serial_number, purchase_cost, warranty_expiry, status, condition_status, location, vendor, specifications) 
+								SELECT 'LAP-001', 'Dell Latitude 7420 Business Laptop', c.id, 'Dell', 'Latitude 7420', 'DL7420001', 1200.00, '2027-01-15', 'AVAILABLE', 'NEW', 'IT Storage Room', 'Dell Technologies', 'Intel i7, 16GB RAM, 512GB SSD'
+								FROM asset_categories c WHERE c.category_name = 'LAPTOP' LIMIT 1
+							]]></db:sql>
+						</db:insert>
+						
+						<db:insert config-ref="H2_Database_Config" doc:name="Insert More Sample Assets">
+							<db:sql><![CDATA[
+								INSERT INTO assets (asset_tag, asset_name, category_id, brand, model, serial_number, purchase_cost, warranty_expiry, status, condition_status, location, vendor, specifications) 
+								SELECT 'ID-001', 'Employee ID Card - Level 2 Access', c.id, 'HID Global', 'ProxCard II', 'HID001', 25.00, '2029-01-01', 'AVAILABLE', 'NEW', 'Security Office', 'HID Global Corp', 'RFID, Photo ID, Building Access'
+								FROM asset_categories c WHERE c.category_name = 'ID_CARD' LIMIT 1
+							]]></db:sql>
+						</db:insert>
+						
+						<logger level="INFO" message="Database initialization completed successfully" />
+						
+						<error-handler>
+							<on-error-continue type="DB:*">
+								<logger level="WARN" message="Database initialization warning (continuing): #[error.description]" />
+							</on-error-continue>
+						</error-handler>
+					</try>
 				</try>
 			</when>
 			<otherwise>
-				<logger level="DEBUG" message="Database initialization disabled in configuration"/>
+				<logger level="DEBUG"
+					message="Database initialization disabled in configuration" />
 			</otherwise>
 		</choice>
 	</flow>
 
 	<!-- Application Startup Flow -->
-	<flow name="application-startup" doc:name="Application Startup" initialState="started">
+	<flow name="application-startup" doc:name="Application Startup"
+		initialState="started">
 		<scheduler doc:name="Startup Scheduler">
 			<scheduling-strategy>
-				<fixed-frequency frequency="86400" timeUnit="SECONDS" startDelay="1"/>
+				<fixed-frequency frequency="86400"
+					timeUnit="SECONDS" startDelay="1" />
 			</scheduling-strategy>
 		</scheduler>
-		
-		<logger level="INFO" message="Assets Allocation MCP Server starting up - Version: ${mcp.server.version}"/>
-		<logger level="INFO" message="Environment: ${env} | Database Strategy: ${db.strategy}"/>
-		<logger level="INFO" message="Features - Mock: ${mcp.features.mock.enabled} | Audit: ${mcp.features.audit.enabled}"/>
-		<logger level="INFO" message="Server URL: ${mcp.server.baseUrl}"/>
-		<logger level="INFO" message="APIKit Router enabled for contract-first API development"/>
-		<logger level="INFO" message="Database Initialization: ${db.initialization.enabled} | Script: init-script.sql (SINGLE SOURCE)"/>
-		
+
+		<logger level="INFO"
+			message="Assets Allocation MCP Server starting up - Version: ${mcp.server.version}" />
+		<logger level="INFO"
+			message="Environment: ${env} | Database Strategy: ${db.strategy}" />
+		<logger level="INFO"
+			message="Features - Mock: ${mcp.features.mock.enabled} | Audit: ${mcp.features.audit.enabled}" />
+		<logger level="INFO"
+			message="Server URL: ${mcp.server.baseUrl}" />
+		<logger level="INFO"
+			message="APIKit Router enabled for contract-first API development" />
+		<logger level="INFO"
+			message="Database Initialization: ${db.initialization.enabled} | Script: init-h2.sql (SINGLE SOURCE)" />
+
 		<!-- Initialize monitoring metrics if enabled -->
 		<choice doc:name="Initialize Monitoring">
-			<when expression="${monitoring.metrics.enabled}">
-				<logger level="INFO" message="Initializing production metrics collection"/>
+			<when expression="#[p('monitoring.metrics.enabled')]">
+				<logger level="INFO"
+					message="Initializing production metrics collection" />
 			</when>
 			<otherwise>
-				<logger level="DEBUG" message="Metrics collection disabled"/>
+				<logger level="DEBUG" message="Metrics collection disabled" />
 			</otherwise>
 		</choice>
 	</flow>

@@ -621,7 +621,7 @@ output application/java
 		</scheduler>
 		
 		<choice doc:name="Database Initialization Enabled?">
-			<when expression='#["${db.initialization.enabled}" == "true"]'>
+			<when expression="#[p('db.initialization.enabled')]">
 				<flow-ref name="smart-database-setup" doc:name="Initialize Database"/>
 			</when>
 			<otherwise>
@@ -640,7 +640,7 @@ output application/java
 		<try doc:name="Primary Database Setup">
 			<choice doc:name="Database Strategy Selection">
 				
-				<when expression='#["${db.strategy}" == "h2"]'>
+				<when expression='#[p("db.strategy") == "h2"]'>
 					<flow-ref name="setup-h2-database"/>
 					<set-variable variableName="activeDatabase" value="h2"/>
 				</when>
@@ -1572,14 +1572,14 @@ output application/json
 	<flow name="database-health-status" doc:name="Database Health Check">
 		<try doc:name="Test Database Connection">
 			<choice doc:name="Test Active Database">
-				<when expression='#["${db.strategy}" == "h2"]'>
+				<when expression='#[p("db.strategy") == "h2"]'>
 					<db:select config-ref="H2_Database_Config">
 						<db:sql><![CDATA[SELECT COUNT(*) as asset_count FROM assets]]></db:sql>
 					</db:select>
 					<set-variable variableName="dbType" value="H2"/>
 				</when>
 				<otherwise>
-					<logger level="WARN" message="Unknown employee status: #[payload.status] for #[payload.email]" />
+					<logger level="WARN" message='Unknown database strategy: ${db.strategy}' />
 				</otherwise>
 			</choice>
 			

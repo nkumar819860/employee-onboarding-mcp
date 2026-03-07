@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Onboarding MCP System - Comprehensive Documentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* Professional Color Palette */
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary-color: #64748b;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            
+            /* Neutral Colors */
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            /* Typography */
+            --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-family);
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            font-size: var(--font-size-base);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: var(--space-8);
+            background: var(--white);
+            padding: var(--space-12);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gray-200);
+        }
+        
+        header h1 {
+            color: var(--gray-900);
+            font-size: var(--font-size-4xl);
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        header p {
+            font-size: var(--font-size-lg);
+            color: var(--gray-500);
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .tab-container {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            background: var(--gray-800);
+            overflow-x: auto;
+            border-bottom: 2px solid var(--gray-200);
+            position: relative;
+        }
+        
+        .tab-buttons::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .tab-buttons::-webkit-scrollbar-track {
+            background: var(--gray-700);
+        }
+        
+        .tab-buttons::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: var(--radius-sm);
+        }
+        
+        .tab-button {
+            background: transparent;
+            color: var(--gray-300);
+            border: none;
+            padding: var(--space-4) var(--space-6);
+            cursor: pointer;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            font-family: var(--font-family);
+            transition: all var(--transition-normal);
+            white-space: nowrap;
+            min-width: fit-content;
+            position: relative;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-button:hover {
+            background: var(--gray-700);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+        
+        .tab-button.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-bottom-color: var(--accent-color);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-color);
+            animation: slideIn var(--transition-normal);
+        }
+        
+        @keyframes slideIn {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        .tab-content {
+            display: none;
+            padding: var(--space-10);
+            animation: fadeIn var(--transition-normal) ease-in;
+            max-width: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+        
+        h2 {
+            color: var(--gray-900);
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            margin-bottom: var(--space-6);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: var(--space-3);
+            position: relative;
+            letter-spacing: -0.01em;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: var(--radius-sm);
+        }
+        
+        h3 {
+            color: var(--gray-800);
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            margin: var(--space-8) 0 var(--space-4);
+            letter-spacing: -0.01em;
+        }
+        
+        h4 {
+            color: var(--gray-700);
+            font-size: var(--font-size-lg);
+            font-weight: 500;
+            margin: var(--space-6) 0 var(--space-3);
+        }
+        
+        p {
+            margin-bottom: var(--space-4);
+            color: var(--gray-600);
+            line-height: 1.7;
+        }
+        
+        ul, ol {
+            margin: var(--space-4) 0;
+            padding-left: var(--space-6);
+        }
+        
+        li {
+            margin-bottom: var(--space-2);
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+        
+        .service-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            margin: var(--space-6) 0;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+        
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+        
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            margin-right: var(--space-4);
+            box-shadow: var(--shadow);
+        }
+        
+        .endpoint-list {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: var(--space-6);
+            margin: var(--space-4) 0;
+            border-left: 4px solid var(--primary-color);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .endpoint {
+            display: flex;
+            align-items: center;
+            margin: var(--space-3) 0;
+            padding: var(--space-4);
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-fast);
+            border: 1px solid var(--gray-100);
+        }
+        
+        .endpoint:hover {
+            background: var(--gray-50);
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+        
+        .method {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius);
+            color: var(--white);
+            font-weight: 600;
+            font-size: var(--font-size-xs);
+            margin-right: var(--space-4);
+            min-width: 70px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .method.get { background: var(--success-color); }
+        .method.post { background: var(--error-color); }
+        .method.put { background: var(--warning-color); }
+        .method.delete { background: #dc2626; }
+        
+        .code-block {
+            background: var(--gray-900);
+            color: var(--gray-100);
+            padding: var(--space-6);
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: var(--space-4) 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+            position: relative;
+            border: 1px solid var(--gray-700);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .code-block::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .code-block::-webkit-scrollbar-track {
+            background: var(--gray-800);
+            border-radius: var(--radius-sm);
+        }
+        
+        .code-block::-webkit-scrollbar-thumb {
+            background: var(--gray-600);
+            border-radius: var(--radius-sm);
+        }
+        
+        .code-block pre {
+            margin: 0;
+            line-height: 1.5;
+            font-size: var(--font-size-sm);
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: var(--space-3);
+            right: var(--space-3);
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            font-family: var(--font-family);
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .copy-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+        
+        .copy-button:active {
+            transform: translateY(0);
+        }
+        
+        .postman-button {
+            background: linear-gradient(135deg, #ff6c37, #ff4500);
+            color: var(--white);
+            border: none;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            font-family: var(--font-family);
+            margin: var(--space-3) var(--space-3) var(--space-3) 0;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        
+        .postman-button::before {
+            content: '📮';
+            font-size: var(--font-size-sm);
+        }
+        
+        .postman-button:hover {
+            background: linear-gradient(135deg, #e55a2b, #dc2626);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .postman-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .instruction-box {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-lg);
+            margin: var(--space-6) 0;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .instruction-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            pointer-events: none;
+        }
+        
+        .instruction-box h3 {
+            color: var(--white);
+            margin-bottom: var(--space-3);
+        }
+        
+        .instruction-box p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: var(--font-size-base);
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, var(--warning-color), #f59e0b);
+            color: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            margin: var(--space-6) 0;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid #fbbf24;
+        }
+        
+        .warning-box h3 {
+            color: var(--white);
+            margin-bottom: var(--space-3);
+        }
+        
+        .warning-box p, 
+        .warning-box li {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-lg);
+            margin: var(--space-6) 0;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid #34d399;
+        }
+        
+        .success-box h3 {
+            color: var(--white);
+            margin-bottom: var(--space-3);
+        }
+        
+        .success-box p, 
+        .success-box li {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .architecture-diagram {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            margin: var(--space-6) 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .flow-item {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            padding: var(--space-3) var(--space-5);
+            margin: var(--space-3);
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            box-shadow: var(--shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .flow-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .arrow {
+            font-size: var(--font-size-2xl);
+            color: var(--gray-400);
+            margin: 0 var(--space-3);
+            transition: color var(--transition-fast);
+        }
+        
+        .arrow:hover {
+            color: var(--primary-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--space-6) 0;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+            position: relative;
+        }
+        
+        table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+        
+        table:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+        
+        th, td {
+            padding: var(--space-4) var(--space-5);
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--gray-800), var(--gray-700));
+            color: var(--white);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: var(--font-size-xs);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        th:first-child {
+            border-top-left-radius: var(--radius-lg);
+        }
+        
+        th:last-child {
+            border-top-right-radius: var(--radius-lg);
+        }
+        
+        th::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        
+        th:hover::after {
+            opacity: 1;
+        }
+        
+        td {
+            color: var(--gray-600);
+            font-weight: 400;
+            border-left: 3px solid transparent;
+        }
+        
+        tr {
+            transition: all var(--transition-fast);
+        }
+        
+        tr:hover {
+            background: linear-gradient(90deg, var(--gray-50), var(--white));
+            transform: scale(1.001);
+        }
+        
+        tr:hover td {
+            border-left-color: var(--primary-color);
+            color: var(--gray-700);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:last-child td:first-child {
+            border-bottom-left-radius: var(--radius-lg);
+        }
+        
+        tr:last-child td:last-child {
+            border-bottom-right-radius: var(--radius-lg);
+        }
+        
+        /* Alternating row colors for better readability */
+        tr:nth-child(even) {
+            background: rgba(248, 250, 252, 0.5);
+        }
+        
+        tr:nth-child(even):hover {
+            background: linear-gradient(90deg, var(--gray-100), var(--gray-50));
+        }
+        
+        /* Code styling within tables */
+        td code {
+            background: linear-gradient(135deg, var(--gray-100), var(--gray-50));
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: var(--font-size-xs);
+            color: var(--gray-800);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        td code:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: var(--white);
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+        
+        /* Status indicators in tables */
+        .status-active {
+            background: var(--success-color);
+            color: var(--white);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-inactive {
+            background: var(--gray-400);
+            color: var(--white);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-pending {
+            background: var(--warning-color);
+            color: var(--white);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Responsive table wrapper */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            margin: var(--space-6) 0;
+        }
+        
+        .table-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: var(--radius-sm);
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: var(--space-12);
+            padding: var(--space-10);
+            background: linear-gradient(135deg, var(--white), var(--gray-50));
+            border-radius: var(--radius-xl);
+            color: var(--gray-500);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--success-color));
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .footer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.03), transparent 70%);
+            pointer-events: none;
+        }
+        
+        .footer-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .footer-logo {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--space-4);
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .footer p {
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            margin: var(--space-2) 0;
+            color: var(--gray-600);
+            transition: color var(--transition-normal);
+        }
+        
+        .footer:hover p {
+            color: var(--gray-700);
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-6);
+            margin: var(--space-4) 0;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: var(--gray-500);
+            text-decoration: none;
+            font-weight: 500;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+            transition: left var(--transition-normal);
+        }
+        
+        .footer-link:hover {
+            color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .footer-link:hover::before {
+            left: 100%;
+        }
+        
+        .footer-divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: var(--radius-sm);
+            margin: var(--space-4) auto;
+            animation: pulse 2s infinite;
+        }
+        
+        .footer-meta {
+            font-size: var(--font-size-sm);
+            color: var(--gray-400);
+            margin-top: var(--space-4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-3);
+            flex-wrap: wrap;
+        }
+        
+        .footer-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: var(--white);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-xl);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-3);
+            margin: var(--space-4) 0;
+        }
+        
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .social-icon:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: var(--white);
+            transform: translateY(-3px) rotate(5deg);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .loading {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Selection Colors */
+        ::selection {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        
+        ::-moz-selection {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        
+        /* Focus States */
+        button:focus,
+        .tab-button:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* Responsive Design Enhancements */
+        @media (max-width: 1024px) {
+            .container {
+                padding: var(--space-4);
+            }
+            
+            .tab-content {
+                padding: var(--space-6);
+            }
+            
+            header {
+                padding: var(--space-8);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            :root {
+                --font-size-4xl: 2rem;
+                --font-size-3xl: 1.5rem;
+                --font-size-2xl: 1.25rem;
+            }
+            
+            .tab-buttons {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                width: 100%;
+                text-align: center;
+                border-radius: 0;
+                border-bottom: 1px solid var(--gray-600);
+            }
+            
+            .tab-button:last-child {
+                border-bottom: none;
+            }
+            
+            .container {
+                padding: var(--space-3);
+            }
+            
+            .tab-content {
+                padding: var(--space-4);
+            }
+            
+            header {
+                padding: var(--space-6);
+            }
+            
+            header h1 {
+                font-size: var(--font-size-3xl);
+            }
+            
+            header p {
+                font-size: var(--font-size-base);
+            }
+            
+            .service-card {
+                padding: var(--space-5);
+            }
+            
+            .service-icon {
+                width: 40px;
+                height: 40px;
+                font-size: var(--font-size-base);
+            }
+            
+            .flow-item {
+                margin: var(--space-2);
+                padding: var(--space-2) var(--space-4);
+                font-size: var(--font-size-xs);
+            }
+            
+            .arrow {
+                font-size: var(--font-size-lg);
+                margin: 0 var(--space-2);
+            }
+            
+            table {
+                font-size: var(--font-size-xs);
+            }
+            
+            th, td {
+                padding: var(--space-2) var(--space-3);
+            }
+            
+            .postman-button {
+                width: 100%;
+                justify-content: center;
+                margin: var(--space-2) 0;
+            }
+            
+            .code-block {
+                font-size: var(--font-size-xs);
+                padding: var(--space-4);
+            }
+            
+            .copy-button {
+                position: static;
+                margin-top: var(--space-2);
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .service-card {
+                padding: var(--space-4);
+            }
+            
+            .service-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .service-icon {
+                margin-right: 0;
+                margin-bottom: var(--space-2);
+            }
+            
+            .architecture-diagram {
+                padding: var(--space-4);
+            }
+            
+            .flow-item {
+                display: block;
+                margin: var(--space-2) 0;
+            }
+            
+            .arrow {
+                display: block;
+                text-align: center;
+                margin: var(--space-2) 0;
+                transform: rotate(90deg);
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            body {
+                background: white;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .tab-buttons {
+                display: none;
+            }
+            
+            .tab-content {
+                display: block !important;
+                page-break-inside: avoid;
+                padding: 0;
+            }
+            
+            .postman-button,
+            .copy-button {
+                display: none;
+            }
+            
+            .service-card {
+                break-inside: avoid;
+                border: 1px solid #ccc;
+                margin-bottom: 1rem;
+            }
+            
+            .code-block {
+                border: 1px solid #ccc;
+                background: #f5f5f5;
+                color: #000;
+            }
+            
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+        }
+        
+        /* Dark Mode Support (optional) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --white: #1a1a1a;
+                --gray-50: #2d2d2d;
+                --gray-100: #3d3d3d;
+                --gray-200: #4d4d4d;
+                --gray-300: #5d5d5d;
+                --gray-400: #6d6d6d;
+                --gray-500: #7d7d7d;
+                --gray-600: #8d8d8d;
+                --gray-700: #9d9d9d;
+                --gray-800: #adadad;
+                --gray-900: #ffffff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Employee Onboarding MCP System</h1>
+            <p>Comprehensive Documentation & API Guide</p>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showTab('overview')">📋 Overview</button>
+                <button class="tab-button" onclick="showTab('broker')">🤖 Agent Broker</button>
+                <button class="tab-button" onclick="showTab('assets')">💼 Assets MCP</button>
+                <button class="tab-button" onclick="showTab('email')">📧 Email MCP</button>
+                <button class="tab-button" onclick="showTab('employee')">👥 Employee MCP</button>
+                <button class="tab-button" onclick="showTab('architecture')">🏗️ Architecture</button>
+                <button class="tab-button" onclick="showTab('deployment')">🚀 Deployment</button>
+                <button class="tab-button" onclick="showTab('postman')">📮 API Testing</button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <h2>System Overview</h2>
+                
+                <div class="instruction-box">
+                    <h3>🎯 What is this System?</h3>
+                    <p>The Employee Onboarding MCP System is a comprehensive microservices-based platform that automates and streamlines the employee onboarding process. It consists of multiple MCP (Model Context Protocol) servers and an intelligent agent broker that orchestrates the entire workflow.</p>
+                </div>
+                
+                <h3>📊 System Components</h3>
+                
+                <div class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">🤖</div>
+                        <div>
+                            <h4>Employee Onboarding Agent Broker</h4>
+                            <p>Intelligent orchestration engine that coordinates the entire onboarding process</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">💼</div>
+                        <div>
+                            <h4>Assets Allocation MCP Server</h4>
+                            <p>Manages IT asset allocation, tracking, and returns for new employees</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">📧</div>
+                        <div>
+                            <h4>Email Notification MCP Server</h4>
+                            <p>Handles all email communications throughout the onboarding process</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">👥</div>
+                        <div>
+                            <h4>Employee Profile MCP Server</h4>
+                            <p>Manages employee profiles, data, and onboarding status tracking</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>🌟 Key Features</h3>
+                <ul style="margin: 20px 0; font-size: 16px; line-height: 2;">
+                    <li><strong>Automated Workflow:</strong> Streamlined onboarding process from start to finish</li>
+                    <li><strong>Asset Management:</strong> Intelligent IT asset allocation and tracking</li>
+                    <li><strong>Email Communications:</strong> Automated notifications and welcome messages</li>
+                    <li><strong>Profile Management:</strong> Comprehensive employee data management</li>
+                    <li><strong>Status Tracking:</strong> Real-time onboarding progress monitoring</li>
+                    <li><strong>Fallback Support:</strong> Robust error handling with mock mode capabilities</li>
+                </ul>
+            </div>
+            
+            <!-- Agent Broker Tab -->
+            <div id="broker" class="tab-content">
+                <h2>🤖 Employee Onboarding Agent Broker</h2>
+                
+                <div class="instruction-box">
+                    <h3>🧠 Natural Language Processing</h3>
+                    <p><strong>Use Natural Language:</strong> "Onboard a new employee named John Smith with email john.smith@company.com for the IT department, allocate laptop and ID card"</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3>📝 Service Description</h3>
+                    <p>The Agent Broker is the intelligent orchestration layer that coordinates the entire employee onboarding process. It communicates with all MCP servers to complete onboarding tasks seamlessly.</p>
+                    
+                    <h4>🌐 Base URL</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard('http://localhost:8081')">Copy</button>
+                        http://localhost:8081
+                    </div>
+                </div>
+                
+                <h3>🔗 API Endpoints</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/health</strong> - Health check endpoint
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/info</strong> - MCP server information
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/orchestrate-employee-onboarding</strong> - Complete onboarding process
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/get-onboarding-status</strong> - Check onboarding status
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/retry-failed-step</strong> - Retry failed onboarding step
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/tools/check-system-health</strong> - System health check
+                    </div>
+                </div>
+                
+                <h3>📋 Complete Onboarding Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/orchestrate-employee-onboarding
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Smith", 
+  "email": "john.smith@company.com",
+  "phone": "+1-555-0123",
+  "department": "IT",
+  "position": "Software Developer",
+  "startDate": "2024-03-15",
+  "salary": 75000,
+  "manager": "Jane Doe",
+  "managerEmail": "jane.doe@company.com",
+  "companyName": "TechCorp Inc",
+  "assets": ["laptop", "id-card", "mobile-phone"]
+}
+                    </pre>
+                </div>
+                
+                <h3>📤 Expected Response</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+{
+  "success": true,
+  "message": "Employee onboarding completed successfully",
+  "employeeId": "EMP001",
+  "onboardingId": "OB-2024-001",
+  "steps": {
+    "profile-creation": "COMPLETED",
+    "asset-allocation": "COMPLETED", 
+    "welcome-email": "COMPLETED",
+    "asset-notification": "COMPLETED",
+    "onboarding-complete": "COMPLETED"
+  },
+  "allocatedAssets": [
+    {
+      "type": "laptop",
+      "serial": "LAP-001",
+      "assignedDate": "2024-03-15",
+      "status": "active"
+    }
+  ],
+  "timestamp": "2024-03-15T10:30:00Z"
+}
+                    </pre>
+                </div>
+                
+                <button class="postman-button" onclick="generatePostmanCollection('broker')">📮 Generate Postman Collection</button>
+            </div>
+            
+            <!-- Assets MCP Tab -->
+            <div id="assets" class="tab-content">
+                <h2>💼 Assets Allocation MCP Server</h2>
+                
+                <div class="instruction-box">
+                    <h3>🧠 Natural Language Processing</h3>
+                    <p><strong>Use Natural Language:</strong> "Allocate a laptop and ID card to employee EMP001" or "Return asset LAP-001 in good condition"</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3>📝 Service Description</h3>
+                    <p>Manages IT asset allocation, tracking, and returns for employees. Supports laptops, ID cards, mobile phones, monitors, and headsets with intelligent inventory management.</p>
+                    
+                    <h4>🌐 Base URL</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard('http://localhost:8083')">Copy</button>
+                        http://localhost:8083
+                    </div>
+                </div>
+                
+                <h3>🔗 API Endpoints</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/health</strong> - Health check endpoint
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/info</strong> - MCP server information
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/allocate-assets</strong> - Allocate assets to employee
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/return-asset</strong> - Return allocated asset
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/tools/list-assets</strong> - List all assets
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/tools/get-available-assets</strong> - Get available assets
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/get-employee-assets</strong> - Get assets for employee
+                    </div>
+                </div>
+                
+                <h3>📋 Asset Allocation Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/allocate-assets
+Content-Type: application/json
+
+{
+  "employeeId": "EMP001",
+  "firstName": "John",
+  "lastName": "Smith",
+  "department": "IT",
+  "position": "Developer",
+  "assets": ["laptop", "id-card", "mobile-phone"]
+}
+                    </pre>
+                </div>
+                
+                <h3>🔄 Asset Return Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/return-asset
+Content-Type: application/json
+
+{
+  "assetTag": "LAP-001",
+  "condition": "GOOD",
+  "notes": "Asset returned in excellent condition"
+}
+                    </pre>
+                </div>
+                
+                <h3>📊 Supported Asset Types</h3>
+                <table>
+                    <tr><th>Asset Type</th><th>Description</th><th>Max per Employee</th></tr>
+                    <tr><td>LAPTOP</td><td>Corporate laptops and portable computers</td><td>2</td></tr>
+                    <tr><td>ID_CARD</td><td>Employee identification cards</td><td>1</td></tr>
+                    <tr><td>MOBILE_PHONE</td><td>Corporate mobile phones and devices</td><td>1</td></tr>
+                    <tr><td>MONITOR</td><td>External monitors and displays</td><td>2</td></tr>
+                    <tr><td>HEADSET</td><td>Audio headsets and communication devices</td><td>1</td></tr>
+                </table>
+                
+                <button class="postman-button" onclick="generatePostmanCollection('assets')">📮 Generate Postman Collection</button>
+            </div>
+            
+            <!-- Email MCP Tab -->
+            <div id="email" class="tab-content">
+                <h2>📧 Email Notification MCP Server</h2>
+                
+                <div class="instruction-box">
+                    <h3>🧠 Natural Language Processing</h3>
+                    <p><strong>Use Natural Language:</strong> "Send welcome email to john.smith@company.com with employee details" or "Send asset notification for laptop allocation"</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3>📝 Service Description</h3>
+                    <p>Handles all email communications throughout the onboarding process including welcome emails, asset allocation notifications, and onboarding completion messages.</p>
+                    
+                    <h4>🌐 Base URL</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard('http://localhost:8084')">Copy</button>
+                        http://localhost:8084
+                    </div>
+                </div>
+                
+                <h3>🔗 API Endpoints</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/health</strong> - Health check endpoint
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/info</strong> - MCP server information
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/send-welcome-email</strong> - Send welcome email
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/send-asset-notification</strong> - Send asset allocation notification
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/send-onboarding-complete</strong> - Send completion notification
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/tools/get-email-templates</strong> - Get available templates
+                    </div>
+                </div>
+                
+                <h3>📋 Welcome Email Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/send-welcome-email
+Content-Type: application/json
+
+{
+  "employeeId": "EMP001",
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@company.com",
+  "department": "IT",
+  "position": "Software Developer",
+  "startDate": "2024-03-15",
+  "manager": "Jane Doe",
+  "managerEmail": "jane.doe@company.com",
+  "companyName": "TechCorp Inc"
+}
+                    </pre>
+                </div>
+                
+                <h3>🔔 Asset Notification Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/send-asset-notification  
+Content-Type: application/json
+
+{
+  "employeeId": "EMP001",
+  "employeeName": "John Smith",
+  "email": "john.smith@company.com",
+  "allocatedAssets": [
+    {
+      "type": "laptop",
+      "serial": "LAP-001", 
+      "assignedDate": "2024-03-15",
+      "status": "active"
+    }
+  ],
+  "pickupLocation": "IT Support Desk",
+  "pickupTime": "9:00 AM - 5:00 PM"
+}
+                    </pre>
+                </div>
+                
+                <h3>📧 Email Templates</h3>
+                <table>
+                    <tr><th>Template</th><th>Purpose</th><th>Variables</th></tr>
+                    <tr><td>employee-welcome.html</td><td>Welcome new employees</td><td>name, department, startDate, manager</td></tr>
+                    <tr><td>asset-allocation.html</td><td>Asset pickup notification</td><td>assets, location, time</td></tr>
+                    <tr><td>onboarding-complete.html</td><td>Onboarding completion</td><td>employee, completedSteps</td></tr>
+                </table>
+                
+                <button class="postman-button" onclick="generatePostmanCollection('email')">📮 Generate Postman Collection</button>
+            </div>
+            
+            <!-- Employee MCP Tab -->
+            <div id="employee" class="tab-content">
+                <h2>👥 Employee Profile MCP Server</h2>
+                
+                <div class="instruction-box">
+                    <h3>🧠 Natural Language Processing</h3>
+                    <p><strong>Use Natural Language:</strong> "Create profile for John Smith in IT department" or "Update onboarding status for EMP001 to completed"</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3>📝 Service Description</h3>
+                    <p>Manages employee profiles, personal data, and tracks onboarding status throughout the process. Provides comprehensive employee information management.</p>
+                    
+                    <h4>🌐 Base URL</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard('http://localhost:8082')">Copy</button>
+                        http://localhost:8082
+                    </div>
+                </div>
+                
+                <h3>🔗 API Endpoints</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/health</strong> - Health check endpoint
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/info</strong> - MCP server information  
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/create-employee-profile</strong> - Create employee profile
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/update-employee-profile</strong> - Update employee profile
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/get-employee-profile</strong> - Get employee profile
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <strong>/api/mcp/tools/update-onboarding-status</strong> - Update onboarding status
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <strong>/api/mcp/tools/list-employees</strong> - List all employees
+                    </div>
+                </div>
+                
+                <h3>📋 Create Profile Example</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/create-employee-profile
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@company.com",
+  "phone": "+1-555-0123",
+  "department": "IT",
+  "position": "Software Developer",
+  "startDate": "2024-03-15",
+  "salary": 75000,
+  "manager": "Jane Doe",
+  "managerEmail": "jane.doe@company.com"
+}
+                    </pre>
+                </div>
+                
+                <h3>📊 Onboarding Status Update</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+POST /api/mcp/tools/update-onboarding-status
+Content-Type: application/json
+
+{
+  "employeeId": "EMP001",
+  "status": "IN_PROGRESS",
+  "step": "ASSET_ALLOCATION",
+  "stepStatus": "COMPLETED",
+  "notes": "Assets allocated successfully"
+}
+                    </pre>
+                </div>
+                
+                <h3>📋 Onboarding Status Values</h3>
+                <table>
+                    <tr><th>Status</th><th>Description</th></tr>
+                    <tr><td>NOT_STARTED</td><td>Onboarding process has not begun</td></tr>
+                    <tr><td>IN_PROGRESS</td><td>Onboarding is currently in progress</td></tr>
+                    <tr><td>COMPLETED</td><td>Onboarding process completed successfully</td></tr>
+                    <tr><td>FAILED</td><td>Onboarding process failed</td></tr>
+                    <tr><td>PAUSED</td><td>Onboarding process temporarily paused</td></tr>
+                </table>
+                
+                <button class="postman-button" onclick="generatePostmanCollection('employee')">📮 Generate Postman Collection</button>
+            </div>
+            
+            <!-- Architecture Tab -->
+            <div id="architecture" class="tab-content">
+                <h2>🏗️ System Architecture</h2>
+                
+                <div class="instruction-box">
+                    <h3>🎯 Microservices Architecture</h3>
+                    <p>The Employee Onboarding MCP System follows a distributed microservices architecture with an intelligent agent broker coordinating multiple specialized MCP servers.</p>
+                </div>
+                
+                <div class="architecture-diagram">
+                    <h3>📊 System Flow Diagram</h3>
+                    <div style="margin: 30px 0;">
+                        <div class="flow-item">Agent Broker</div>
+                        <span class="arrow">→</span>
+                        <div class="flow-item">Employee MCP</div>
+                        <span class="arrow">→</span>
+                        <div class="flow-item">Assets MCP</div>
+                        <span class="arrow">→</span>
+                        <div class="flow-item">Email MCP</div>
+                    </div>
+                </div>
+                
+                <h3>🔄 Onboarding Workflow</h3>
+                <div class="service-card">
+                    <ol style="font-size: 16px; line-height: 2;">
+                        <li><strong>Profile Creation:</strong> Employee profile is created in the system</li>
+                        <li><strong>Asset Allocation:</strong> Required IT assets are allocated to the employee</li>
+                        <li><strong>Welcome Email:</strong> Welcome email is sent to the new employee</li>
+                        <li><strong>Asset Notification:</strong> Notification about asset pickup is sent</li>
+                        <li><strong>Completion:</strong> Onboarding completion email is sent to all stakeholders</li>
+                    </ol>
+                </div>
+                
+                <h3>🌐 Network Configuration</h3>
+                <table>
+                    <tr><th>Service</th><th>Port</th><th>Protocol</th><th>Health Check</th></tr>
+                    <tr><td>Agent Broker</td><td>8081</td><td>HTTP/HTTPS</td><td>/api/health</td></tr>
+                    <tr><td>Employee MCP</td><td>8082</td><td>HTTP/HTTPS</td><td>/api/health</td></tr>
+                    <tr><td>Assets MCP</td><td>8083</td><td>HTTP/HTTPS</td><td>/api/health</td></tr>
+                    <tr><td>Email MCP</td><td>8084</td><td>HTTP/HTTPS</td><td>/api/health</td></tr>
+                </table>
+                
+                <h3>🗄️ Database Architecture</h3>
+                <div class="service-card">
+                    <h4>H2 Embedded Database</h4>
+                    <p>Each service uses an H2 embedded database for development and testing. Key features:</p>
+                    <ul>
+                        <li>In-memory database for fast performance</li>
+                        <li>Automatic table creation and data initialization</li>
+                        <li>Fallback to mock mode if database unavailable</li>
+                        <li>Support for production PostgreSQL (configurable)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Deployment Tab -->
+            <div id="deployment" class="tab-content">
+                <h2>🚀 Deployment Guide</h2>
+                
+                <div class="warning-box">
+                    <h3>⚠️ Prerequisites</h3>
+                    <ul>
+                        <li>Java 17 or higher</li>
+                        <li>Maven 3.8 or higher</li>
+                        <li>Anypoint Studio (optional for development)</li>
+                        <li>Docker (optional for containerized deployment)</li>
+                    </ul>
+                </div>
+                
+                <h3>💻 Local Development Setup</h3>
+                <div class="service-card">
+                    <h4>1. Clone the Repository</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+git clone https://github.com/your-org/employee-onboarding-mcp.git
+cd employee-onboarding-mcp
+                        </pre>
+                    </div>
+                    
+                    <h4>2. Start Individual Services</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+# Terminal 1 - Employee MCP Server
+cd employee-onboarding-mcp-server
+mvn clean mule:run
+
+# Terminal 2 - Assets MCP Server  
+cd assets-allocation-mcp-server
+mvn clean mule:run
+
+# Terminal 3 - Email MCP Server
+cd email-notification-mcp-server  
+mvn clean mule:run
+
+# Terminal 4 - Agent Broker
+cd employee-onboarding-agent-broker
+mvn clean mule:run
+                        </pre>
+                    </div>
+                </div>
+                
+                <h3>🐳 Docker Deployment</h3>
+                <div class="service-card">
+                    <h4>1. Build Docker Images</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+# Build all services
+docker-compose build
+
+# Or build individual services
+docker build -t employee-mcp:latest ./employee-onboarding-mcp-server
+docker build -t assets-mcp:latest ./assets-allocation-mcp-server
+docker build -t email-mcp:latest ./email-notification-mcp-server
+docker build -t agent-broker:latest ./employee-onboarding-agent-broker
+                        </pre>
+                    </div>
+                    
+                    <h4>2. Start Services with Docker Compose</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+                        </pre>
+                    </div>
+                </div>
+                
+                <h3>☁️ CloudHub Deployment</h3>
+                <div class="service-card">
+                    <h4>1. Configure Properties</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+# Update src/main/resources/config.properties
+env=CloudHub
+deployment.target=cloudhub
+protocol.strategy=https
+db.strategy=postgresql  # For production
+                        </pre>
+                    </div>
+                    
+                    <h4>2. Deploy to CloudHub</h4>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre>
+# Deploy each service individually
+cd employee-onboarding-mcp-server
+mvn clean deploy -DmuleDeploy
+
+cd ../assets-allocation-mcp-server  
+mvn clean deploy -DmuleDeploy
+
+cd ../email-notification-mcp-server
+mvn clean deploy -DmuleDeploy
+
+cd ../employee-onboarding-agent-broker
+mvn clean deploy -DmuleDeploy
+                        </pre>
+                    </div>
+                </div>
+                
+                <div class="success-box">
+                    <h3>✅ Verification Steps</h3>
+                    <ol>
+                        <li>Check health endpoints: <code>GET /api/health</code></li>
+                        <li>Verify MCP info: <code>GET /api/mcp/info</code></li>
+                        <li>Test complete workflow with Agent Broker</li>
+                        <li>Monitor logs for any errors</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- Postman Tab -->
+            <div id="postman" class="tab-content">
+                <h2>📮 API Testing with Postman</h2>
+                
+                <div class="instruction-box">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Use the buttons below to generate Postman collections for each service. Import them into Postman to start testing immediately!</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3>📋 Available Collections</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div>
+                            <h4>🤖 Agent Broker</h4>
+                            <p>Complete onboarding workflows and orchestration</p>
+                            <button class="postman-button" onclick="generatePostmanCollection('broker')">Generate Collection</button>
+                        </div>
+                        <div>
+                            <h4>💼 Assets MCP</h4>
+                            <p>Asset allocation, returns, and inventory management</p>
+                            <button class="postman-button" onclick="generatePostmanCollection('assets')">Generate Collection</button>
+                        </div>
+                        <div>
+                            <h4>📧 Email MCP</h4>
+                            <p>Email notifications and template management</p>
+                            <button class="postman-button" onclick="generatePostmanCollection('email')">Generate Collection</button>
+                        </div>
+                        <div>
+                            <h4>👥 Employee MCP</h4>
+                            <p>Employee profiles and onboarding status</p>
+                            <button class="postman-button" onclick="generatePostmanCollection('employee')">Generate Collection</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>🧪 Test Scenarios</h3>
+                <div class="service-card">
+                    <h4>🎯 End-to-End Testing</h4>
+                    <ol style="line-height: 2;">
+                        <li><strong>Health Check All Services:</strong> Verify all services are running</li>
+                        <li><strong>Complete Onboarding:</strong> Test full employee onboarding workflow</li>
+                        <li><strong>Asset Management:</strong> Test asset allocation and return processes</li>
+                        <li><strong>Email Notifications:</strong> Verify all email templates and delivery</li>
+                        <li><strong>Status Tracking:</strong> Test onboarding status updates and queries</li>
+                        <li><strong>Error Handling:</strong> Test error scenarios and fallback mechanisms</li>
+                    </ol>
+                </div>
+                
+                <h3>🔧 Environment Setup</h3>
+                <div class="code-block">
+                    <button class="copy-button" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre>
+# Postman Environment Variables
+{
+  "agent_broker_url": "http://localhost:8081",
+  "employee_mcp_url": "http://localhost:8082", 
+  "assets_mcp_url": "http://localhost:8083",
+  "email_mcp_url": "http://localhost:8084",
+  "employee_id": "EMP001",
+  "test_email": "test@company.com"
+}
+                    </pre>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>💡 Testing Tips</h3>
+                    <ul>
+                        <li>Start with health checks to ensure all services are running</li>
+                        <li>Use the Agent Broker for end-to-end testing</li>
+                        <li>Test individual MCP servers for specific functionality</li>
+                        <li>Monitor logs during testing for detailed information</li>
+                        <li>Use mock mode for testing when databases are unavailable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2024 Employee Onboarding MCP System | Built with MuleSoft</p>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab and activate button
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show temporary success message
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#3498db';
+                }, 2000);
+            });
+        }
+        
+        function generatePostmanCollection(service) {
+            let collection;
+            
+            switch(service) {
+                case 'broker':
+                    collection = {
+                        "info": {
+                            "name": "Employee Onboarding Agent Broker",
+                            "description": "API collection for Employee Onboarding Agent Broker MCP Server",
+                            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                        },
+                        "variable": [
+                            {
+                                "key": "base_url",
+                                "value": "http://localhost:8081"
+                            }
+                        ],
+                        "item": [
+                            {
+                                "name": "Health Check",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/health",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "health"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "MCP Server Info",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/info",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "info"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Complete Employee Onboarding",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"email\": \"john.smith@company.com\",\n  \"phone\": \"+1-555-0123\",\n  \"department\": \"IT\",\n  \"position\": \"Software Developer\",\n  \"startDate\": \"2024-03-15\",\n  \"salary\": 75000,\n  \"manager\": \"Jane Doe\",\n  \"managerEmail\": \"jane.doe@company.com\",\n  \"companyName\": \"TechCorp Inc\",\n  \"assets\": [\"laptop\", \"id-card\", \"mobile-phone\"]\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/orchestrate-employee-onboarding",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "orchestrate-employee-onboarding"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Get Onboarding Status",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"employeeId\": \"EMP001\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/get-onboarding-status",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "get-onboarding-status"]
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    break;
+                    
+                case 'assets':
+                    collection = {
+                        "info": {
+                            "name": "Assets Allocation MCP Server",
+                            "description": "API collection for Assets Allocation MCP Server",
+                            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                        },
+                        "variable": [
+                            {
+                                "key": "base_url",
+                                "value": "http://localhost:8083"
+                            }
+                        ],
+                        "item": [
+                            {
+                                "name": "Health Check",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/health",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "health"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Allocate Assets",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"department\": \"IT\",\n  \"position\": \"Developer\",\n  \"assets\": [\"laptop\", \"id-card\", \"mobile-phone\"]\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/allocate-assets",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "allocate-assets"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "List Available Assets",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/get-available-assets",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "get-available-assets"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Return Asset",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"assetTag\": \"LAP-001\",\n  \"condition\": \"GOOD\",\n  \"notes\": \"Asset returned in excellent condition\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/return-asset",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "return-asset"]
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    break;
+                    
+                case 'email':
+                    collection = {
+                        "info": {
+                            "name": "Email Notification MCP Server",
+                            "description": "API collection for Email Notification MCP Server",
+                            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                        },
+                        "variable": [
+                            {
+                                "key": "base_url",
+                                "value": "http://localhost:8084"
+                            }
+                        ],
+                        "item": [
+                            {
+                                "name": "Health Check",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/health",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "health"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Send Welcome Email",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"email\": \"john.smith@company.com\",\n  \"department\": \"IT\",\n  \"position\": \"Software Developer\",\n  \"startDate\": \"2024-03-15\",\n  \"manager\": \"Jane Doe\",\n  \"managerEmail\": \"jane.doe@company.com\",\n  \"companyName\": \"TechCorp Inc\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/send-welcome-email",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "send-welcome-email"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Send Asset Notification",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"employeeName\": \"John Smith\",\n  \"email\": \"john.smith@company.com\",\n  \"allocatedAssets\": [\n    {\n      \"type\": \"laptop\",\n      \"serial\": \"LAP-001\",\n      \"assignedDate\": \"2024-03-15\",\n      \"status\": \"active\"\n    }\n  ],\n  \"pickupLocation\": \"IT Support Desk\",\n  \"pickupTime\": \"9:00 AM - 5:00 PM\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/send-asset-notification",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "send-asset-notification"]
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    break;
+                    
+                case 'employee':
+                    collection = {
+                        "info": {
+                            "name": "Employee Profile MCP Server",
+                            "description": "API collection for Employee Profile MCP Server",
+                            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                        },
+                        "variable": [
+                            {
+                                "key": "base_url",
+                                "value": "http://localhost:8082"
+                            }
+                        ],
+                        "item": [
+                            {
+                                "name": "Health Check",
+                                "request": {
+                                    "method": "GET",
+                                    "header": [],
+                                    "url": {
+                                        "raw": "{{base_url}}/api/health",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "health"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Create Employee Profile",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"email\": \"john.smith@company.com\",\n  \"phone\": \"+1-555-0123\",\n  \"department\": \"IT\",\n  \"position\": \"Software Developer\",\n  \"startDate\": \"2024-03-15\",\n  \"salary\": 75000,\n  \"manager\": \"Jane Doe\",\n  \"managerEmail\": \"jane.doe@company.com\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/create-employee-profile",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "create-employee-profile"]
+                                    }
+                                }
+                            },
+                            {
+                                "name": "Update Onboarding Status",
+                                "request": {
+                                    "method": "POST",
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": {
+                                        "mode": "raw",
+                                        "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"status\": \"IN_PROGRESS\",\n  \"step\": \"ASSET_ALLOCATION\",\n  \"stepStatus\": \"COMPLETED\",\n  \"notes\": \"Assets allocated successfully\"\n}"
+                                    },
+                                    "url": {
+                                        "raw": "{{base_url}}/api/mcp/tools/update-onboarding-status",
+                                        "host": ["{{base_url}}"],
+                                        "path": ["api", "mcp", "tools", "update-onboarding-status"]
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    break;
+            }
+            
+            // Download the collection
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collection, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", collection.info.name.replace(/\s+/g, '_') + "_Collection.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            // Show success message
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Downloaded!';
+            button.style.background = '#27ae60';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '#ff6c37';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
