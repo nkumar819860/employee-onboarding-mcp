@@ -7,6 +7,7 @@
 	xmlns:db="http://www.mulesoft.org/schema/mule/db"
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
 	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:mcp="http://www.mulesoft.org/schema/mule/mcp"
 	xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets"
 	xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
@@ -15,10 +16,12 @@ http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/
         http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
         http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/mcp http://www.mulesoft.org/schema/mule/mcp/current/mule-mcp.xsd
         http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd">
 
 	<!-- Load Properties Configuration -->
 	<configuration-properties file="config.properties" doc:name="Configuration properties"/>
+	
 	
 	<!-- ================================================================== -->
 	<!-- APIKIT ROUTER CONFIGURATION - CONTRACT-FIRST API DEVELOPMENT -->
@@ -100,7 +103,6 @@ output application/json
 	<!-- DATABASE CONFIGURATIONS - PRODUCTION GRADE WITH CONNECTION POOLING -->
 	<!-- ================================================================== -->
 
-
 	<!-- H2 Configuration with Connection Pooling and Script Initialization -->
 	<db:config name="H2_Database_Config" doc:name="H2 Database Config with Scripts">
 		<db:generic-connection 
@@ -123,7 +125,7 @@ output application/json
 	</db:config>
 
 	<!-- ================================================================== -->
-	<!-- HTTP LISTENER CONFIGURATION - ENVIRONMENT AWARE -->
+	<!-- HTTP LISTENER CONFIGURATIONS - ENVIRONMENT AWARE -->
 	<!-- Docker: HTTP | CloudHub/Production: HTTPS with JKS -->
 	<!-- ================================================================== -->
 
@@ -132,18 +134,22 @@ output application/json
 		<http:listener-connection host="${http.host}" port="${http.port}" protocol="HTTP"/>
 	</http:listener-config>
 
-	<!-- HTTPS Listener disabled for development environment -->
-	<!-- Uncomment when TLS connector is available and HTTPS is needed -->
-	<!--
+	<!-- Streamable HTTP Configuration for MCP Protocol -->
+	<http:listener-config name="streamable-http-config" doc:name="Streamable HTTP Config">
+		<http:listener-connection host="${http.host}" port="${mcp.server.port}" protocol="HTTP">
+			<http:protocol-support />
+		</http:listener-connection>
+	</http:listener-config>
+
+	<!-- HTTPS Listener Configuration for CloudHub - HARDCODED PORT -->
 	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTPS Listener config">
-		<http:listener-connection host="${http.host}" port="${https.port}" protocol="HTTPS">
+		<http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
 			<tls:context name="tls-context">
 				<tls:key-store type="jks" path="server.jks"
 					keyPassword="MULEPASS" password="MULEPASS" alias="mule-server" />
 			</tls:context>
 		</http:listener-connection>
 	</http:listener-config>
-	-->
 
 	<!-- ================================================================== -->
 	<!-- PRODUCTION MONITORING & HEALTH CHECK CONFIGURATIONS -->
@@ -157,16 +163,6 @@ output application/json
 			</http:client-socket-properties>
 		</http:request-connection>
 	</http:request-config>
-	
-		<!-- HTTPS Listener Configuration for CloudHub - HARDCODED PORT -->
-	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTPS Listener config" doc:id="3ec4e269-b354-4ee4-9a30-7e21c9b47159">
-		<http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
-			<tls:context name="tls-context">
-				<tls:key-store type="jks" path="server.jks"
-					keyPassword="MULEPASS" password="MULEPASS" alias="mule-server" />
-			</tls:context>
-		</http:listener-connection>
-	</http:listener-config>
 
 	<!-- ================================================================== -->
 	<!-- OPERATIONAL FLOWS FOR PRODUCTION READINESS -->
@@ -203,7 +199,6 @@ output application/json
 							</error-handler>
 						</try>
 					</when>
-					
 					
 					<!-- Auto Strategy: Use H2 for all environments -->
 					<when expression='#["auto" == "${db.strategy}"]'>
@@ -249,6 +244,7 @@ output application/json
 		<logger level="INFO" message="Environment: ${env} | Database Strategy: ${db.strategy}"/>
 		<logger level="INFO" message="Features - Mock: ${mcp.features.mock.enabled} | Database Required: ${mcp.features.database.required} | Audit: ${mcp.features.audit.enabled}"/>
 		<logger level="INFO" message="Server URL: ${mcp.server.baseUrl}"/>
+		<logger level="INFO" message="MCP Protocol enabled on port: ${mcp.server.port}"/>
 		<logger level="INFO" message="APIKit Router enabled for contract-first API development"/>
 		
 		<!-- Database initialization now handled via H2 script approach -->

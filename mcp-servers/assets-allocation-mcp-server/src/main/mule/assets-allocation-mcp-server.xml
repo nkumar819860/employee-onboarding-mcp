@@ -13,6 +13,357 @@
       http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
 
 	<!-- ========================================================================================= -->
+	<!-- MCP TOOL LISTENER - AGENT FABRIC INTEGRATION -->
+	<!-- ========================================================================================= -->
+
+	<!-- MCP Tool Listener for Agent Fabric -->
+	<flow name="mcp-listen" doc:name="MCP Tool Listener Flow">
+		<http:listener doc:name="MCP Listen Listener" config-ref="HTTPS_Listener_config" path="/mcp/listen"/>
+		<logger level="INFO" message="MCP Tool Request: #[payload.method default 'unknown'] - #[payload.params.name default 'no-tool-name']" doc:name="Log Request"/>
+		
+		<choice doc:name="Route Tool Requests">
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "allocate-assets"]'>
+				<logger level="INFO" message="Processing allocate-assets tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-allocate-assets-impl" doc:name="Allocate Assets"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "return-asset"]'>
+				<logger level="INFO" message="Processing return-asset tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-return-asset-impl" doc:name="Return Asset"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "list-assets"]'>
+				<logger level="INFO" message="Processing list-assets tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-list-assets-impl" doc:name="List Assets"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "get-available-assets"]'>
+				<logger level="INFO" message="Processing get-available-assets tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-get-available-assets-impl" doc:name="Get Available Assets"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "get-employee-assets"]'>
+				<logger level="INFO" message="Processing get-employee-assets tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-get-employee-assets-impl" doc:name="Get Employee Assets"/>
+			</when>
+			<otherwise>
+				<logger level="WARN" message="Unsupported MCP tool request: #[payload.method] - #[payload.params.name default 'no-name']" doc:name="Logger"/>
+				<ee:transform doc:name="Unsupported Tool Response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Tool not supported: " ++ (payload.params.name default "unknown")
+		}
+	],
+	isError: true,
+	error: {
+		code: "TOOL_NOT_FOUND",
+		message: "The requested tool is not available in this MCP server"
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+
+	<!-- ========================================================================================= -->
+	<!-- MCP TOOL IMPLEMENTATION FLOWS -->
+	<!-- ========================================================================================= -->
+
+	<!-- MCP Tool: Allocate Assets Implementation -->
+	<flow name="mcp-tool-allocate-assets-impl" doc:name="MCP Tool - Allocate Assets Implementation">
+		<try doc:name="Try Allocate Assets">
+			<logger level="INFO" message="MCP Tool: Allocating assets for employee: #[vars.toolParams.employeeId]" doc:name="Logger"/>
+			
+			<!-- Set payload for existing business logic -->
+			<ee:transform doc:name="Transform MCP Params to API Format">
+				<ee:message>
+					<ee:set-payload><![CDATA[#[vars.toolParams]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			
+			<!-- Call existing business logic -->
+			<flow-ref name="allocate-assets-with-fallback" doc:name="Call Existing Logic"/>
+			
+			<ee:transform doc:name="MCP Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Assets allocated successfully for employee " ++ (payload.employeeId default "unknown") ++ ". Allocated " ++ (payload.allocationCount default 0) ++ " asset(s)."
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to allocate assets: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "ASSET_ALLOCATION_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- MCP Tool: Return Asset Implementation -->
+	<flow name="mcp-tool-return-asset-impl" doc:name="MCP Tool - Return Asset Implementation">
+		<try doc:name="Try Return Asset">
+			<logger level="INFO" message="MCP Tool: Returning asset: #[vars.toolParams.assetTag]" doc:name="Logger"/>
+			
+			<!-- Set payload for existing business logic -->
+			<ee:transform doc:name="Transform MCP Params to API Format">
+				<ee:message>
+					<ee:set-payload><![CDATA[#[vars.toolParams]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			
+			<!-- Call existing business logic -->
+			<flow-ref name="return-asset-with-fallback" doc:name="Call Existing Logic"/>
+			
+			<ee:transform doc:name="MCP Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Asset returned successfully: " ++ (payload.assetTag default "unknown") ++ " in " ++ (payload.condition default "GOOD") ++ " condition."
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to return asset: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "ASSET_RETURN_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- MCP Tool: List Assets Implementation -->
+	<flow name="mcp-tool-list-assets-impl" doc:name="MCP Tool - List Assets Implementation">
+		<try doc:name="Try List Assets">
+			<logger level="INFO" message="MCP Tool: Listing assets with filters" doc:name="Logger"/>
+			
+			<!-- Set variables from tool params -->
+			<set-variable variableName="statusFilter" value="#[vars.toolParams.status default '']" doc:name="Set Status Filter"/>
+			<set-variable variableName="categoryFilter" value="#[vars.toolParams.category default '']" doc:name="Set Category Filter"/>
+			
+			<!-- Call existing business logic -->
+			<flow-ref name="list-assets-with-fallback" doc:name="Call Existing Logic"/>
+			
+			<ee:transform doc:name="MCP Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Found " ++ (payload.assetCount default 0) ++ " assets. Available: " ++ (payload.statistics.available default 0) ++ ", Allocated: " ++ (payload.statistics.allocated default 0) ++ "."
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to list assets: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "ASSET_LIST_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- MCP Tool: Get Available Assets Implementation -->
+	<flow name="mcp-tool-get-available-assets-impl" doc:name="MCP Tool - Get Available Assets Implementation">
+		<try doc:name="Try Get Available Assets">
+			<logger level="INFO" message="MCP Tool: Getting available assets" doc:name="Logger"/>
+			
+			<!-- Call existing business logic -->
+			<flow-ref name="get-available-assets-with-fallback" doc:name="Call Existing Logic"/>
+			
+			<ee:transform doc:name="MCP Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Found " ++ (payload.assetCount default 0) ++ " available assets across " ++ sizeOf(payload.categories default []) ++ " categories."
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to get available assets: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "AVAILABLE_ASSETS_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- MCP Tool: Get Employee Assets Implementation -->
+	<flow name="mcp-tool-get-employee-assets-impl" doc:name="MCP Tool - Get Employee Assets Implementation">
+		<try doc:name="Try Get Employee Assets">
+			<logger level="INFO" message="MCP Tool: Getting assets for employee: #[vars.toolParams.employeeId]" doc:name="Logger"/>
+			
+			<!-- Set variable for existing business logic -->
+			<set-variable variableName="employeeId" value="#[vars.toolParams.employeeId]" doc:name="Set Employee ID"/>
+			
+			<!-- Call existing business logic -->
+			<flow-ref name="get-employee-assets-with-fallback" doc:name="Call Existing Logic"/>
+			
+			<ee:transform doc:name="MCP Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Employee " ++ (payload.employeeId default "unknown") ++ " has " ++ (payload.assetCount default 0) ++ " allocated asset(s)."
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to get employee assets: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "EMPLOYEE_ASSETS_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- ========================================================================================= -->
 	<!-- APIKIT ROUTER - MODERN API GATEWAY WITH AUTOMATIC ROUTING -->
 	<!-- ========================================================================================= -->
 

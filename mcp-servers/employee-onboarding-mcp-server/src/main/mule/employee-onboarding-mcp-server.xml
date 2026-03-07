@@ -5,12 +5,322 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" 
 	xmlns:http="http://www.mulesoft.org/schema/mule/http" 
+	xmlns:mcp="http://www.mulesoft.org/schema/mule/mcp"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 		http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
 		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/mcp http://www.mulesoft.org/schema/mule/mcp/current/mule-mcp.xsd">
+
+	<!-- ========================================================================================= -->
+	<!-- MCP SERVER IMPLEMENTATION - AGENT FABRIC INTEGRATION -->
+	<!-- ========================================================================================= -->
+
+	<!-- MCP Server Info Endpoint -->
+	<flow name="mcp-info" doc:name="MCP Server Info Flow">
+		<http:listener doc:name="MCP Info Listener" config-ref="streamable-http-config" path="/mcp/info"/>
+		<ee:transform doc:name="MCP Server Info Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: "${mcp.server.name}",
+	version: "${mcp.server.version}",
+	description: "${mcp.server.description}",
+	capabilities: {
+		tools: {}
+	},
+	tools: [
+		{
+			name: "create-employee",
+			description: "Create a new employee record in the system. Automatically generates employee ID if not provided and sets up initial employee profile for the onboarding process.",
+			inputSchema: {
+				"type": "object",
+				properties: {
+					employeeId: {
+						"type": "string",
+						description: "Unique identifier for the employee (auto-generated if not provided)"
+					},
+					firstName: {
+						"type": "string",
+						description: "Employee's first name"
+					},
+					lastName: {
+						"type": "string",
+						description: "Employee's last name"
+					},
+					email: {
+						"type": "string",
+						format: "email",
+						description: "Employee's email address (must be unique)"
+					},
+					phone: {
+						"type": "string",
+						description: "Employee's phone number"
+					},
+					departmentId: {
+						"type": "number",
+						description: "Department ID (foreign key to departments table)"
+					},
+					position: {
+						"type": "string",
+						description: "Job title/position"
+					},
+					hireDate: {
+						"type": "string",
+						format: "date",
+						description: "Employee hire date (YYYY-MM-DD format, defaults to current date)"
+					},
+					salary: {
+						"type": "number",
+						description: "Annual salary"
+					},
+					address: {
+						"type": "string",
+						description: "Employee's address"
+					}
+				},
+				required: ["firstName", "lastName", "email"],
+				additionalProperties: false
+			}
+		},
+		{
+			name: "get-employee",
+			description: "Retrieve detailed information for a specific employee by their employee ID. Returns complete employee profile including current status and metadata.",
+			inputSchema: {
+				"type": "object",
+				properties: {
+					empId: {
+						"type": "string",
+						description: "Unique employee identifier (e.g., EMP001)"
+					}
+				},
+				required: ["empId"],
+				additionalProperties: false
+			}
+		},
+		{
+			name: "list-employees",
+			description: "Retrieve a paginated list of employees with optional filtering by status. Supports pagination for efficient handling of large employee datasets.",
+			inputSchema: {
+				"type": "object",
+				properties: {
+					page: {
+						"type": "number",
+						minimum: 1,
+						"default": 1,
+						description: "Page number for pagination"
+					},
+					size: {
+						"type": "number",
+						minimum: 1,
+						maximum: 100,
+						"default": 10,
+						description: "Number of employees per page"
+					},
+					status: {
+						"type": "string",
+						"enum": ["PENDING", "ACTIVE", "INACTIVE", "TERMINATED"],
+						description: "Filter employees by status"
+					}
+				},
+				additionalProperties: false
+			}
+		},
+		{
+			name: "update-employee-status",
+			description: "Update the onboarding status of an employee. Supports standard employee lifecycle statuses and tracks status change history.",
+			inputSchema: {
+				"type": "object",
+				properties: {
+					empId: {
+						"type": "string",
+						description: "Unique employee identifier (e.g., EMP001)"
+					},
+					status: {
+						"type": "string",
+						"enum": ["PENDING", "ACTIVE", "INACTIVE", "TERMINATED"],
+						description: "New status for the employee"
+					}
+				},
+				required: ["empId", "status"],
+				additionalProperties: false
+			}
+		}
+	],
+	resources: [
+		{
+			uri: "employees://profiles/all",
+			name: "Employee Profiles",
+			description: "Complete employee profile data including personal info, employment details, and status"
+		},
+		{
+			uri: "employees://status/pending",
+			name: "Pending Employees",
+			description: "List of employees with pending onboarding status"
+		},
+		{
+			uri: "employees://status/active",
+			name: "Active Employees",
+			description: "List of currently active employees"
+		},
+		{
+			uri: "employees://analytics/metrics",
+			name: "Employee Metrics",
+			description: "Employee onboarding analytics and metrics"
+		}
+	]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: Create Employee -->
+	<flow name="mcp-tool-create-employee" doc:name="MCP Tool - Create Employee">
+		<http:listener doc:name="MCP Create Employee Listener" config-ref="streamable-http-config" path="/mcp/tools/create-employee"/>
+		<logger level="INFO" message="MCP Tool: Create employee - Request: #[payload]"/>
+		<flow-ref name="create-employee-with-fallback" doc:name="Create Employee Logic"/>
+		<ee:transform doc:name="MCP Response Format">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Employee created successfully with ID: " ++ payload.employeeId
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: Get Employee -->
+	<flow name="mcp-tool-get-employee" doc:name="MCP Tool - Get Employee">
+		<http:listener doc:name="MCP Get Employee Listener" config-ref="streamable-http-config" path="/mcp/tools/get-employee"/>
+		<set-variable variableName="empId" value="#[payload.empId]" doc:name="Set Employee ID"/>
+		<logger level="INFO" message="MCP Tool: Get employee - ID: #[vars.empId]"/>
+		<flow-ref name="get-employee-with-fallback" doc:name="Get Employee Logic"/>
+		<ee:transform doc:name="MCP Response Format">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if (payload.success == false)
+	{
+		content: [
+			{
+				"type": "text",
+				text: payload.message
+			}
+		],
+		isError: true,
+		result: payload
+	}
+else
+	{
+		content: [
+			{
+				"type": "text",
+				text: "Employee found: " ++ payload.first_name ++ " " ++ payload.last_name ++ " (" ++ payload.employee_id ++ ")"
+			}
+		],
+		isError: false,
+		result: payload
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: List Employees -->
+	<flow name="mcp-tool-list-employees" doc:name="MCP Tool - List Employees">
+		<http:listener doc:name="MCP List Employees Listener" config-ref="streamable-http-config" path="/mcp/tools/list-employees"/>
+		<set-variable variableName="page" value="#[payload.page default 1]" doc:name="Set Page"/>
+		<set-variable variableName="size" value="#[payload.size default 10]" doc:name="Set Size"/>
+		<set-variable variableName="statusFilter" value="#[payload.status default '']" doc:name="Set Status Filter"/>
+		<logger level="INFO" message="MCP Tool: List employees - Page: #[vars.page], Size: #[vars.size]"/>
+		<flow-ref name="list-employees-with-fallback" doc:name="List Employees Logic"/>
+		<ee:transform doc:name="MCP Response Format">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Found " ++ sizeOf(payload.data) ++ " employees on page " ++ payload.pagination.page
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: Update Employee Status -->
+	<flow name="mcp-tool-update-employee-status" doc:name="MCP Tool - Update Employee Status">
+		<http:listener doc:name="MCP Update Employee Status Listener" config-ref="streamable-http-config" path="/mcp/tools/update-employee-status"/>
+		<set-variable variableName="empId" value="#[payload.empId]" doc:name="Set Employee ID"/>
+		<set-variable variableName="status" value="#[upper(payload.status)]" doc:name="Set Status"/>
+		<logger level="INFO" message="MCP Tool: Update employee status - ID: #[vars.empId], Status: #[vars.status]"/>
+		
+		<!-- Validate Status -->
+		<choice doc:name="Validate Status">
+			<when expression='#[vars.status in ["PENDING", "ACTIVE", "INACTIVE", "TERMINATED"]]'>
+				<flow-ref name="update-employee-status-with-fallback" doc:name="Update Status Logic"/>
+				<ee:transform doc:name="MCP Success Response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Employee status updated successfully: " ++ vars.empId ++ " -> " ++ vars.status
+		}
+	],
+	isError: false,
+	result: payload
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="MCP Invalid Status Response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Invalid status: " ++ vars.status ++ ". Must be one of: PENDING, ACTIVE, INACTIVE, TERMINATED"
+		}
+	],
+	isError: true,
+	result: {
+		success: false,
+		error: "INVALID_STATUS",
+		message: "Status must be one of: PENDING, ACTIVE, INACTIVE, TERMINATED",
+		provided: vars.status
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 
 	<!-- ========================================================================================= -->
 	<!-- APIKIT ROUTER MAIN FLOW - CONTRACT-FIRST API DEVELOPMENT -->
@@ -250,169 +560,71 @@ output application/java
 	</flow>
 
 	<!-- ========================================================================================= -->
-	<!-- OPTIONS CORS HANDLERS -->
-	<!-- ========================================================================================= -->
-
-	<!-- OPTIONS /health -->
-	<flow name="options:\health:employee-onboarding-mcp-api-config" doc:name="OPTIONS /health">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /health" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- OPTIONS /mcp/info -->
-	<flow name="options:\mcp\info:employee-onboarding-mcp-api-config" doc:name="OPTIONS /mcp/info">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /mcp/info" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- OPTIONS /mcp/tools/create-employee -->
-	<flow name="options:\mcp\tools\create-employee:employee-onboarding-mcp-api-config" doc:name="OPTIONS /mcp/tools/create-employee">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /mcp/tools/create-employee" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- OPTIONS /mcp/tools/get-employee/{empId} -->
-	<flow name="options:\mcp\tools\get-employee\(empId):employee-onboarding-mcp-api-config" doc:name="OPTIONS /mcp/tools/get-employee/{empId}">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /mcp/tools/get-employee" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- OPTIONS /mcp/tools/list-employees -->
-	<flow name="options:\mcp\tools\list-employees:employee-onboarding-mcp-api-config" doc:name="OPTIONS /mcp/tools/list-employees">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /mcp/tools/list-employees" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- OPTIONS /mcp/tools/update-employee-status/{empId}/{status} -->
-	<flow name="options:\mcp\tools\update-employee-status\(empId)\(status):employee-onboarding-mcp-api-config" doc:name="OPTIONS /mcp/tools/update-employee-status">
-		<set-variable variableName="origin" value="#[attributes.headers.origin default '*']" doc:name="Set CORS Origin" />
-		<logger level="INFO" message="CORS preflight request for /mcp/tools/update-employee-status" doc:name="Logger" />
-		<set-payload value="" mimeType="text/plain" doc:name="Empty Response Body" />
-		<ee:transform doc:name="CORS Headers">
-			<ee:variables>
-				<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0
-output application/java
----
-{
-	"Access-Control-Allow-Origin": vars.origin,
-	"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-	"Access-Control-Allow-Headers": "Content-Type, Authorization, X-MCP-Client",
-	"Access-Control-Max-Age": "3600"
-}]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-	</flow>
-
-	<!-- ========================================================================================= -->
 	<!-- PRODUCTION-GRADE HEALTH CHECK WITH COMPREHENSIVE STATUS -->
 	<!-- ========================================================================================= -->
 
 	<flow name="health-check-implementation" doc:name="Production Health Check Implementation">
-		<parallel-foreach doc:name="Parallel Health Checks">
-			<ee:transform doc:name="Health Check Tasks">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-["database", "application", "configuration"]]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			
-			<choice doc:name="Health Check Type">
-				<when expression='#[payload == "database"]'>
-					<flow-ref name="database-health-status" doc:name="Database Health"/>
-				</when>
-				<when expression='#[payload == "application"]'>
-					<flow-ref name="application-health-status" doc:name="Application Health"/>
-				</when>
-				<when expression='#[payload == "configuration"]'>
-					<flow-ref name="configuration-health-status" doc:name="Configuration Health"/>
-				</when>
-			</choice>
-		</parallel-foreach>
+		<set-variable variableName="healthChecks" value='#[["database", "application", "configuration"]]' doc:name="Initialize Health Checks Array"/>
+		<set-variable variableName="overallHealthy" value="#[true]" doc:name="Initialize Overall Health Status"/>
 		
-		<ee:transform doc:name="Aggregate Health Response">
+		<!-- Sequential Health Check Processing - Ensures proper data handling -->
+		<try doc:name="Try Database Health Check">
+			<flow-ref name="database-health-status" doc:name="Database Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Database Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Database health check failed: #[error.description]" doc:name="Database Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'database', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Database Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<try doc:name="Try Application Health Check">
+			<flow-ref name="application-health-status" doc:name="Application Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Application Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Application health check failed: #[error.description]" doc:name="Application Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'application', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Application Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<try doc:name="Try Configuration Health Check">
+			<flow-ref name="configuration-health-status" doc:name="Configuration Health"/>
+			<set-variable variableName="healthChecks" value="#[vars.healthChecks + [payload]]" doc:name="Add Configuration Health"/>
+			<set-variable variableName="overallHealthy" value="#[vars.overallHealthy and payload.healthy]" doc:name="Update Overall Health"/>
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="ERROR" message="Configuration health check failed: #[error.description]" doc:name="Configuration Health Error"/>
+					<set-variable variableName="healthChecks" value="#[vars.healthChecks + [{name: 'configuration', healthy: false, status: 'DOWN', details: {error: error.description}}]]" doc:name="Add Failed Configuration Health"/>
+					<set-variable variableName="overallHealthy" value="#[false]" doc:name="Set Unhealthy"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
+		<ee:transform doc:name="Aggregate Health Response with Sequential Processing">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	status: if (payload filter ($.healthy == false) != []) "DEGRADED" else "HEALTHY",
+	status: if (vars.overallHealthy) "HEALTHY" else "DEGRADED",
 	service: "${mcp.server.name}",
 	version: "${mcp.server.version}",
 	timestamp: now(),
 	environment: "${env}",
-	checks: payload,
+	checks: vars.healthChecks,
+	summary: {
+		total: sizeOf(vars.healthChecks),
+		healthy: sizeOf(vars.healthChecks filter $.healthy),
+		unhealthy: sizeOf(vars.healthChecks filter (not $.healthy)),
+		processingMode: "sequential"
+	},
 	uptime: (now() - |2024-01-01T00:00:00|) as Number {unit: "seconds"},
 	features: {
 		mockMode: "${mcp.features.mock.enabled}",
@@ -423,7 +635,7 @@ output application/json
 			</ee:message>
 		</ee:transform>
 		
-		<logger level="INFO" message="Health check completed - Status: #[payload.status]"/>
+		<logger level="INFO" message="Health check completed sequentially - Status: #[payload.status], Checks: #[payload.summary.total]"/>
 	</flow>
 
 	<!-- ========================================================================================= -->
@@ -700,39 +912,6 @@ output application/json
 				</on-error-continue>
 			</error-handler>
 		</try>
-	</flow>
-
-	<!-- ========================================================================================= -->
-	<!-- DATABASE INITIALIZATION - HANDLED BY H2 SCRIPT APPROACH -->
-	<!-- ========================================================================================= -->
-
-	<!-- Simple Database Health Verification (No DDL Operations) -->
-	<flow name="database-verification" initialState="started" doc:name="Database Schema Verification">
-		<scheduler doc:name="Database Verification Scheduler">
-			<scheduling-strategy>
-				<fixed-frequency frequency="300" startDelay="10" timeUnit="SECONDS"/>
-			</scheduling-strategy>
-		</scheduler>
-		
-		<choice doc:name="Database Verification Enabled?">
-			<when expression="${db.initialization.enabled}">
-				<logger level="INFO" message="Database initialized via H2 script - Verifying schema exists"/>
-				<try doc:name="Verify Schema">
-					<db:select config-ref="H2_Database_Config">
-						<db:sql>SELECT COUNT(*) as table_count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'</db:sql>
-					</db:select>
-					<logger level="INFO" message="Database schema verification successful - Tables found: #[payload[0].table_count]"/>
-					<error-handler>
-						<on-error-continue type="ANY">
-							<logger level="WARN" message="Database schema verification failed: #[error.description]"/>
-						</on-error-continue>
-					</error-handler>
-				</try>
-			</when>
-			<otherwise>
-				<logger level="DEBUG" message="Database schema verification disabled via configuration"/>
-			</otherwise>
-		</choice>
 	</flow>
 
 	<!-- ========================================================================================= -->

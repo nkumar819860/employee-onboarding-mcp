@@ -15,6 +15,320 @@
 	<!-- Import Global Configuration -->
 	<import file="global.xml"/>
 
+	<!-- ========================================================================================= -->
+	<!-- MCP TOOL LISTENER - AGENT FABRIC INTEGRATION -->
+	<!-- ========================================================================================= -->
+
+	<!-- MCP Tool Listener for Agent Fabric -->
+	<flow name="mcp-listen" doc:name="MCP Tool Listener Flow">
+		<http:listener doc:name="MCP Listen Listener" config-ref="HTTPS_Listener_config" path="/mcp/listen"/>
+		<logger level="INFO" message="MCP Tool Request: #[payload.method default 'unknown'] - #[payload.params.name default 'no-tool-name']" doc:name="Log Request"/>
+		
+		<choice doc:name="Route Tool Requests">
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "send-welcome-email"]'>
+				<logger level="INFO" message="Processing send-welcome-email tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-send-welcome-email-impl" doc:name="Send Welcome Email"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "send-asset-notification"]'>
+				<logger level="INFO" message="Processing send-asset-notification tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-send-asset-notification-impl" doc:name="Send Asset Notification"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "send-onboarding-complete"]'>
+				<logger level="INFO" message="Processing send-onboarding-complete tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-send-onboarding-complete-impl" doc:name="Send Onboarding Complete"/>
+			</when>
+			<when expression='#[payload.method == "tools/call" and payload.params.name == "test-email-config"]'>
+				<logger level="INFO" message="Processing test-email-config tool request" doc:name="Logger"/>
+				<set-variable variableName="toolParams" value="#[payload.params.arguments]" doc:name="Extract Tool Parameters"/>
+				<flow-ref name="mcp-tool-test-email-config-impl" doc:name="Test Email Config"/>
+			</when>
+			<otherwise>
+				<logger level="WARN" message="Unsupported MCP tool request: #[payload.method] - #[payload.params.name default 'no-name']" doc:name="Logger"/>
+				<ee:transform doc:name="Unsupported Tool Response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Tool not supported: " ++ (payload.params.name default "unknown")
+		}
+	],
+	isError: true,
+	error: {
+		code: "TOOL_NOT_FOUND",
+		message: "The requested tool is not available in this MCP server"
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+
+	<!-- ========================================================================================= -->
+	<!-- MCP TOOL IMPLEMENTATION FLOWS -->
+	<!-- ========================================================================================= -->
+
+	<!-- MCP Tool: Send Welcome Email Implementation -->
+	<flow name="mcp-tool-send-welcome-email-impl" doc:name="MCP Tool - Send Welcome Email Implementation">
+		<try doc:name="Try Send Welcome Email">
+			<choice doc:name="Check if Email Enabled">
+				<when expression='#["${notification.employee.onboarding.enabled}" == "true"]'>
+					<!-- Send Real Email -->
+					<logger level="INFO" message="Sending real welcome email to: #[vars.toolParams.email]" doc:name="Logger" />
+					
+					<email:send config-ref="gmail-smtp-config" doc:name="Send Welcome Email" 
+						subject="#['Welcome to the Team - Your Journey Begins! 🎉']" 
+						fromAddress="${email.from.address}">
+						<email:to-addresses>
+							<email:to-address value="#[vars.toolParams.email]" />
+						</email:to-addresses>
+						<email:cc-addresses>
+							<email:cc-address value="${notification.cc.hr}" />
+						</email:cc-addresses>
+						<email:body contentType="text/html">
+							<email:content><![CDATA[
+								<h2>Welcome to the Team! 🎉</h2>
+								<p>Dear #[vars.toolParams.firstName] #[vars.toolParams.lastName],</p>
+								<p>Congratulations on joining #[vars.toolParams.companyName default "Our Company"]!</p>
+								<h3>Employee Details:</h3>
+								<ul>
+									<li><strong>Employee ID:</strong> #[vars.toolParams.employeeId]</li>
+									<li><strong>Department:</strong> #[vars.toolParams.department default "Not Assigned"]</li>
+									<li><strong>Position:</strong> #[vars.toolParams.position default "Employee"]</li>
+									<li><strong>Start Date:</strong> #[vars.toolParams.startDate default (now() as String {format: 'yyyy-MM-dd'})]</li>
+									<li><strong>Manager:</strong> #[vars.toolParams.manager default "To be assigned"]</li>
+								</ul>
+								<p>We're excited to have you on board and look forward to working with you!</p>
+								<p>Best regards,<br/>HR Team</p>
+								<p><em>This email was sent automatically by the Employee Onboarding System.</em></p>
+							]]></email:content>
+						</email:body>
+					</email:send>
+					
+					<ee:transform doc:name="MCP Real Email Success Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+		   "type": "text",
+			text: "Welcome email sent successfully to " ++ vars.toolParams.email ++ " for employee " ++ vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName
+		}
+	],
+	isError: false,
+	result: {
+		status: "success",
+		message: "Welcome email sent successfully",
+		recipient: vars.toolParams.email,
+		employeeName: vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName,
+		emailType: "welcome",
+		deliveryStatus: "DELIVERED",
+		timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
+		mockMode: false
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</when>
+				<otherwise>
+					<!-- Mock Email Sending -->
+					<ee:transform doc:name="MCP Mock Welcome Email Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Welcome email sent successfully (MOCK MODE) to " ++ vars.toolParams.email ++ " for employee " ++ vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName
+		}
+	],
+	isError: false,
+	result: {
+		status: "success",
+		message: "Welcome email sent successfully (MOCK MODE)",
+		recipient: vars.toolParams.email,
+		employeeName: vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName,
+		emailType: "welcome",
+		deliveryStatus: "DELIVERED_MOCK",
+		timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
+		mockMode: true
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</otherwise>
+			</choice>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Email Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Failed to send welcome email: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "EMAIL_SEND_FAILED",
+		message: error.description
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
+	<!-- MCP Tool: Send Asset Notification Implementation -->
+	<flow name="mcp-tool-send-asset-notification-impl" doc:name="MCP Tool - Send Asset Notification Implementation">
+		<ee:transform doc:name="MCP Asset Notification Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Asset allocation notification sent successfully (MOCK MODE) to " ++ vars.toolParams.email ++ " for employee " ++ vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName
+		}
+	],
+	isError: false,
+	result: {
+		status: "success",
+		message: "Asset allocation notification sent successfully (MOCK MODE)",
+		recipient: vars.toolParams.email,
+		employeeName: vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName,
+		emailType: "asset-notification",
+		assetCount: sizeOf(vars.toolParams.assets default []),
+		deliveryStatus: "DELIVERED_MOCK",
+		timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
+		mockMode: true
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: Send Onboarding Complete Implementation -->
+	<flow name="mcp-tool-send-onboarding-complete-impl" doc:name="MCP Tool - Send Onboarding Complete Implementation">
+		<ee:transform doc:name="MCP Onboarding Complete Response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Onboarding complete notification sent successfully (MOCK MODE) to " ++ vars.toolParams.email ++ " for employee " ++ vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName
+		}
+	],
+	isError: false,
+	result: {
+		status: "success",
+		message: "Onboarding complete notification sent successfully (MOCK MODE)",
+		recipient: vars.toolParams.email,
+		employeeName: vars.toolParams.firstName ++ " " ++ vars.toolParams.lastName,
+		emailType: "onboarding-complete",
+		assetCount: sizeOf(vars.toolParams.assets default []),
+		deliveryStatus: "DELIVERED_MOCK",
+		timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
+		mockMode: true
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<!-- MCP Tool: Test Email Config Implementation -->
+	<flow name="mcp-tool-test-email-config-impl" doc:name="MCP Tool - Test Email Config Implementation">
+		<try doc:name="Try Test Email">
+			<email:send config-ref="gmail-smtp-config" doc:name="Send Test Email" subject="Test Email - Notification MCP Server" fromAddress="${email.from.address}">
+				<email:to-addresses>
+					<email:to-address value="#[vars.toolParams.testEmail default '${email.from.address}']" />
+				</email:to-addresses>
+				<email:body contentType="text/html">
+					<email:content><![CDATA[
+						<h2>Email Configuration Test</h2>
+						<p>This is a test email from the Notification MCP Server.</p>
+						<p><strong>Timestamp:</strong> #[now()]</p>
+						<p><strong>Server:</strong> ${mcp.serverName}</p>
+                        <p><strong>Version:</strong> ${mcp.serverVersion}</p>
+						<p>If you receive this email, your Gmail SMTP configuration is working correctly!</p>
+					]]></email:content>
+				</email:body>
+			</email:send>
+
+			<ee:transform doc:name="MCP Test Success Response">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Test email sent successfully to " ++ (vars.toolParams.testEmail default "${email.from.address}")
+		}
+	],
+	isError: false,
+	result: {
+		status: "success",
+		message: "Test email sent successfully",
+		recipient: vars.toolParams.testEmail default "${email.from.address}",
+		timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+
+			<error-handler>
+				<on-error-propagate type="ANY">
+					<ee:transform doc:name="MCP Test Error Response">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	content: [
+		{
+			"type": "text",
+			text: "Email configuration test failed: " ++ error.description
+		}
+	],
+	isError: true,
+	error: {
+		code: "EMAIL_TEST_FAILED",
+		message: error.description,
+		suggestion: "Check Gmail SMTP settings, username, password, and app password configuration"
+	}
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+
 	<!-- APIKit Router Configuration -->
 	<apikit:config name="notification-config" api="api/email-notification-mcp-server.yaml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
 
@@ -264,15 +578,16 @@ output application/java
 output application/json
 ---
 {
-	status: "success",
-	message: "Welcome email sent successfully",
-	recipient: vars.originalPayload.email,
-	employeeName: vars.originalPayload.firstName ++ " " ++ vars.originalPayload.lastName,
-	emailType: "welcome",
-	deliveryStatus: "DELIVERED",
-	timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
-	mockMode: false
-}]]></ee:set-payload>
+  status: "success",
+  message: "Welcome email sent successfully",
+  recipient: vars.originalPayload.email,
+  employeeName: vars.originalPayload.firstName ++ " " ++ vars.originalPayload.lastName,
+  emailType: "welcome",
+  deliveryStatus: "DELIVERED",
+  timestamp: now() as String {format: "yyyy-MM-dd HH:mm:ss"},
+  mockMode: false
+}
+]]></ee:set-payload>
 						</ee:message>
 						<ee:variables>
 							<ee:set-variable variableName="outboundHeaders"><![CDATA[%dw 2.0

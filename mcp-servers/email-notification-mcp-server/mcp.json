@@ -1,0 +1,383 @@
+{
+  "name": "email-notification-mcp-server",
+  "version": "1.0.4",
+  "description": "MCP Server for Email Notifications - Handles automated email notifications for employee onboarding, asset allocation, and workflow completion events",
+  "author": "Employee Onboarding Team",
+  "license": "MIT",
+  "homepage": "https://github.com/employee-onboarding/email-notification-mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/employee-onboarding/email-notification-mcp-server.git"
+  },
+  "mcpServer": {
+    "name": "Email Notification MCP Server",
+    "version": "1.0.4",
+    "description": "Comprehensive email notification system for employee onboarding workflows with Gmail SMTP integration, template engine, and intelligent fallback mechanisms",
+    "baseUrl": "https://email-notification-mcp-server.herokuapp.com",
+    "capabilities": {
+      "emailProviders": ["gmail-smtp", "mock"],
+      "fallbackMode": "mock",
+      "multiTenant": false,
+      "templateEngine": true,
+      "htmlSupport": true,
+      "agentFabricCompatible": true
+    },
+    "endpoints": {
+      "health": "/api/health",
+      "info": "/api/mcp/info",
+      "tools": "/api/mcp/tools", 
+      "listen": "/mcp/listen",
+      "console": "/console"
+    },
+    "tools": [
+      {
+        "name": "send-welcome-email",
+        "description": "Send employee welcome email during onboarding process. Includes comprehensive employee details, company information, manager contact details, and personalized welcome message with HTML template support.",
+        "endpoint": "/api/mcp/tools/send-welcome-email",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string",
+              "description": "Employee's first name for personalization"
+            },
+            "lastName": {
+              "type": "string", 
+              "description": "Employee's last name for personalization"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Employee's email address (recipient)"
+            },
+            "employeeId": {
+              "type": "string",
+              "description": "Unique employee identifier"
+            },
+            "department": {
+              "type": "string",
+              "description": "Employee's department"
+            },
+            "position": {
+              "type": "string",
+              "description": "Employee's job position/title"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Employee start date (YYYY-MM-DD format)"
+            },
+            "manager": {
+              "type": "string",
+              "description": "Manager name"
+            },
+            "managerEmail": {
+              "type": "string",
+              "format": "email",
+              "description": "Manager email address for CC"
+            },
+            "companyName": {
+              "type": "string",
+              "description": "Company name for branding"
+            },
+            "salary": {
+              "type": "number",
+              "description": "Annual salary (optional, for internal notifications)"
+            }
+          },
+          "required": ["firstName", "lastName", "email"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "send-asset-notification",
+        "description": "Send asset allocation notification email when equipment has been assigned to an employee. Includes detailed asset information, pickup instructions, and contact details for IT support.",
+        "endpoint": "/api/mcp/tools/send-asset-notification",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string",
+              "description": "Employee's first name"
+            },
+            "lastName": {
+              "type": "string",
+              "description": "Employee's last name"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Employee's email address (recipient)"
+            },
+            "employeeId": {
+              "type": "string",
+              "description": "Unique employee identifier"
+            },
+            "assets": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {"type": "string"},
+                      "assetType": {"type": "string"},
+                      "serial": {"type": "string"},
+                      "assignedDate": {"type": "string"},
+                      "status": {"type": "string"},
+                      "assetName": {"type": "string"},
+                      "brand": {"type": "string"},
+                      "model": {"type": "string"}
+                    }
+                  }
+                ]
+              },
+              "description": "Array of allocated assets (supports both simple strings and complex objects)"
+            },
+            "allocationDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Date when assets were allocated"
+            },
+            "allocationStatus": {
+              "type": "string",
+              "enum": ["ALLOCATED", "PENDING_PICKUP", "DELIVERED"],
+              "default": "ALLOCATED",
+              "description": "Current allocation status"
+            },
+            "approvedBy": {
+              "type": "string",
+              "description": "Name of person who approved the allocation"
+            },
+            "pickupLocation": {
+              "type": "string",
+              "description": "Location for asset pickup"
+            },
+            "contactEmail": {
+              "type": "string",
+              "format": "email",
+              "description": "IT support contact email"
+            }
+          },
+          "required": ["firstName", "lastName", "email", "assets"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "send-onboarding-complete",
+        "description": "Send onboarding completion notification email when all onboarding steps have been completed successfully. Includes summary of completed tasks, allocated assets, and welcome to team message.",
+        "endpoint": "/api/mcp/tools/send-onboarding-complete",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "firstName": {
+              "type": "string",
+              "description": "Employee's first name"
+            },
+            "lastName": {
+              "type": "string",
+              "description": "Employee's last name"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Employee's email address (recipient)"
+            },
+            "employeeId": {
+              "type": "string",
+              "description": "Unique employee identifier"
+            },
+            "department": {
+              "type": "string",
+              "description": "Employee's department"
+            },
+            "position": {
+              "type": "string",
+              "description": "Employee's job position/title"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Employee start date"
+            },
+            "completionDate": {
+              "type": "string",
+              "format": "date", 
+              "description": "Onboarding completion date (defaults to current date)"
+            },
+            "manager": {
+              "type": "string",
+              "description": "Manager name"
+            },
+            "managerEmail": {
+              "type": "string",
+              "format": "email",
+              "description": "Manager email address for CC"
+            },
+            "companyName": {
+              "type": "string",
+              "description": "Company name for branding"
+            },
+            "assets": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {"type": "string"},
+                      "serial": {"type": "string"},
+                      "assignedDate": {"type": "string"},
+                      "status": {"type": "string"}
+                    }
+                  }
+                ]
+              },
+              "description": "Array of allocated assets for summary"
+            },
+            "onboardingMilestones": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "List of completed onboarding milestones"
+            }
+          },
+          "required": ["firstName", "lastName", "email"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "test-email-config",
+        "description": "Test email configuration and connectivity to Gmail SMTP server. Sends a test email to verify email server settings, authentication, and delivery capabilities.",
+        "endpoint": "/api/mcp/tools/test-email-config",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "testEmail": {
+              "type": "string",
+              "format": "email",
+              "description": "Email address to send test email to (defaults to configured from address)"
+            },
+            "includeConfig": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether to include configuration details in response"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ],
+    "resources": [
+      {
+        "uri": "notifications://templates/welcome",
+        "name": "Welcome Email Template",
+        "description": "HTML template for employee welcome emails with company branding"
+      },
+      {
+        "uri": "notifications://templates/asset-allocation",
+        "name": "Asset Allocation Template",
+        "description": "HTML template for asset allocation notification emails"
+      },
+      {
+        "uri": "notifications://templates/onboarding-complete",
+        "name": "Onboarding Complete Template",
+        "description": "HTML template for onboarding completion celebration emails"
+      },
+      {
+        "uri": "notifications://logs/sent",
+        "name": "Sent Email Logs",
+        "description": "Log of all sent email notifications with delivery status"
+      },
+      {
+        "uri": "notifications://analytics/delivery",
+        "name": "Email Delivery Analytics", 
+        "description": "Email delivery statistics, success rates, and performance metrics"
+      },
+      {
+        "uri": "notifications://config/smtp",
+        "name": "SMTP Configuration Status",
+        "description": "Current SMTP server configuration and connectivity status"
+      }
+    ],
+    "features": {
+      "agentBrokerIntegration": {
+        "enabled": true,
+        "description": "Full compatibility with Employee Onboarding Agent Broker",
+        "asyncNotifications": true,
+        "workflowIntegration": true
+      },
+      "emailSupport": {
+        "providers": ["gmail-smtp"],
+        "fallback": "mock",
+        "htmlTemplates": true,
+        "personalizedContent": true,
+        "ccSupport": true,
+        "attachmentSupport": false
+      },
+      "templates": {
+        "htmlSupport": true,
+        "dynamicContent": true,
+        "branding": true,
+        "localization": false
+      },
+      "monitoring": {
+        "healthChecks": true,
+        "deliveryTracking": true,
+        "errorHandling": true,
+        "logging": "INFO"
+      },
+      "security": {
+        "smtpAuth": true,
+        "tlsEncryption": true,
+        "appPasswords": true
+      }
+    },
+    "configuration": {
+      "emailProvider": "gmail-smtp",
+      "mockMode": "${notification.employee.onboarding.enabled != 'true'}",
+      "templates": {
+        "welcomeEmail": "templates/employee-welcome.html",
+        "assetNotification": "templates/asset-allocation.html", 
+        "onboardingComplete": "templates/onboarding-complete.html"
+      },
+      "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "encryption": "tls",
+        "authentication": "required"
+      }
+    },
+    "integrations": {
+      "employeeOnboardingBroker": {
+        "url": "http://localhost:8081",
+        "integration": "workflow-notifications",
+        "compatible": true,
+        "dataFormat": "JSON"
+      },
+      "employeeOnboardingServer": {
+        "url": "http://localhost:8081",
+        "integration": "employee-welcome-notifications",
+        "compatible": true
+      },
+      "assetAllocationServer": {
+        "url": "http://localhost:8082", 
+        "integration": "asset-notifications",
+        "compatible": true
+      }
+    }
+  }
+}

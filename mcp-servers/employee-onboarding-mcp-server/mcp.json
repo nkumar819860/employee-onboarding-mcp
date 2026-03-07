@@ -1,0 +1,265 @@
+{
+  "name": "employee-onboarding-mcp-server",
+  "version": "2.0.4",
+  "description": "MCP Server for Employee Onboarding Management - Handles employee profile creation, status updates, and onboarding workflow coordination",
+  "author": "Employee Onboarding Team",
+  "license": "MIT",
+  "homepage": "https://github.com/employee-onboarding/employee-onboarding-mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/employee-onboarding/employee-onboarding-mcp-server.git"
+  },
+  "mcpServer": {
+    "name": "Employee Onboarding MCP Server",
+    "version": "2.0.4",
+    "description": "Core employee onboarding system with H2 database support, intelligent fallback mechanisms, and comprehensive employee lifecycle management",
+    "baseUrl": "https://employee-onboarding-mcp-server.herokuapp.com",
+    "capabilities": {
+      "databases": ["h2", "postgresql"],
+      "fallbackMode": "mock",
+      "multiTenant": false,
+      "audit": true,
+      "cache": true,
+      "agentFabricCompatible": true
+    },
+    "endpoints": {
+      "health": "/api/health",
+      "info": "/api/mcp/info",
+      "tools": "/api/mcp/tools",
+      "listen": "/mcp/listen",
+      "console": "/console"
+    },
+    "tools": [
+      {
+        "name": "create-employee",
+        "description": "Create a new employee record in the system. Automatically generates employee ID if not provided and sets up initial employee profile for the onboarding process with comprehensive validation and department assignment.",
+        "endpoint": "/api/mcp/tools/create-employee",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "employeeId": {
+              "type": "string",
+              "description": "Unique identifier for the employee (auto-generated if not provided)"
+            },
+            "firstName": {
+              "type": "string",
+              "description": "Employee's first name"
+            },
+            "lastName": {
+              "type": "string", 
+              "description": "Employee's last name"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Employee's email address (must be unique)"
+            },
+            "phone": {
+              "type": "string",
+              "description": "Employee's phone number"
+            },
+            "departmentId": {
+              "type": "number",
+              "description": "Department ID (foreign key to departments table)"
+            },
+            "position": {
+              "type": "string",
+              "description": "Job title/position"
+            },
+            "hireDate": {
+              "type": "string",
+              "format": "date", 
+              "description": "Employee hire date (YYYY-MM-DD format, defaults to current date)"
+            },
+            "salary": {
+              "type": "number",
+              "description": "Annual salary"
+            },
+            "address": {
+              "type": "string",
+              "description": "Employee's address"
+            },
+            "manager": {
+              "type": "string",
+              "description": "Manager name"
+            },
+            "managerEmail": {
+              "type": "string",
+              "format": "email",
+              "description": "Manager email address"
+            },
+            "companyName": {
+              "type": "string",
+              "description": "Company name"
+            }
+          },
+          "required": ["firstName", "lastName", "email"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get-employee", 
+        "description": "Retrieve detailed information for a specific employee by their employee ID. Returns complete employee profile including current status, department information, and onboarding metadata.",
+        "endpoint": "/api/mcp/tools/get-employee/{empId}",
+        "method": "GET",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "empId": {
+              "type": "string",
+              "description": "Unique employee identifier (e.g., EMP001)"
+            }
+          },
+          "required": ["empId"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "list-employees",
+        "description": "Retrieve a paginated list of employees with optional filtering by status and department. Supports pagination for efficient handling of large employee datasets with comprehensive search and filter capabilities.",
+        "endpoint": "/api/mcp/tools/list-employees",
+        "method": "GET", 
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "description": "Page number for pagination"
+            },
+            "size": {
+              "type": "number", 
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "description": "Number of employees per page"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["PENDING", "ACTIVE", "INACTIVE", "TERMINATED"],
+              "description": "Filter employees by onboarding status"
+            },
+            "department": {
+              "type": "string",
+              "description": "Filter employees by department name"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "update-employee-status",
+        "description": "Update the onboarding status of an employee. Supports standard employee lifecycle statuses and tracks status change history with audit trail and automated notifications.",
+        "endpoint": "/api/mcp/tools/update-employee-status/{empId}/{status}",
+        "method": "PUT",
+        "mcpListener": "/mcp/listen", 
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "empId": {
+              "type": "string",
+              "description": "Unique employee identifier (e.g., EMP001)"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["PENDING", "ACTIVE", "INACTIVE", "TERMINATED"],
+              "description": "New onboarding status for the employee"
+            },
+            "reason": {
+              "type": "string",
+              "description": "Optional reason for status change"
+            },
+            "effectiveDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Effective date for status change (defaults to current date)"
+            }
+          },
+          "required": ["empId", "status"],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "resources": [
+      {
+        "uri": "employees://profiles/all",
+        "name": "Complete Employee Profiles",
+        "description": "Complete employee profile data including personal info, employment details, onboarding status, and department assignments"
+      },
+      {
+        "uri": "employees://status/pending", 
+        "name": "Pending Employees",
+        "description": "List of employees with pending onboarding status awaiting processing"
+      },
+      {
+        "uri": "employees://status/active",
+        "name": "Active Employees", 
+        "description": "List of currently active employees with completed onboarding"
+      },
+      {
+        "uri": "employees://departments/all",
+        "name": "Department Directory",
+        "description": "Complete department information with manager details and employee counts"
+      },
+      {
+        "uri": "employees://analytics/metrics",
+        "name": "Employee Onboarding Metrics",
+        "description": "Employee onboarding analytics, completion rates, and performance metrics"
+      },
+      {
+        "uri": "employees://onboarding/timeline",
+        "name": "Onboarding Timeline",
+        "description": "Employee onboarding process timeline and milestone tracking"
+      }
+    ],
+    "features": {
+      "agentBrokerIntegration": {
+        "enabled": true,
+        "description": "Full compatibility with Employee Onboarding Agent Broker",
+        "workflowOrchestration": true,
+        "statusTracking": true
+      },
+      "databaseSupport": {
+        "primary": "h2",
+        "fallback": "mock", 
+        "autoInitialization": true,
+        "smartFallback": true,
+        "auditTrail": true
+      },
+      "monitoring": {
+        "healthChecks": true,
+        "metrics": true,
+        "logging": "INFO",
+        "statusTracking": true
+      },
+      "validation": {
+        "emailValidation": true,
+        "uniqueConstraints": true,
+        "departmentValidation": true
+      }
+    },
+    "integrations": {
+      "employeeOnboardingBroker": {
+        "url": "http://localhost:8081",
+        "role": "primary-orchestrator",
+        "compatible": true,
+        "dataFormat": "JSON"
+      },
+      "assetAllocationServer": {
+        "url": "http://localhost:8082",
+        "integration": "employee-asset-allocation", 
+        "compatible": true
+      },
+      "emailNotificationServer": {
+        "url": "http://localhost:8083",
+        "integration": "employee-notifications",
+        "compatible": true
+      }
+    }
+  }
+}

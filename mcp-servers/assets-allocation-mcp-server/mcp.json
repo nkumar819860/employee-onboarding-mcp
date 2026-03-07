@@ -1,0 +1,268 @@
+{
+  "name": "assets-allocation-mcp-server",
+  "version": "2.0.4",
+  "description": "MCP Server for Asset Allocation and Management - Handles employee asset assignments, returns, and inventory management for employee onboarding",
+  "author": "Employee Onboarding Team",
+  "license": "MIT",
+  "homepage": "https://github.com/employee-onboarding/assets-allocation-mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/employee-onboarding/assets-allocation-mcp-server.git"
+  },
+  "mcpServer": {
+    "name": "Assets Allocation MCP Server",
+    "version": "2.0.4",
+    "description": "Comprehensive asset allocation and management system for employee onboarding with H2 database support and intelligent fallback mechanisms",
+    "baseUrl": "https://assets-allocation-mcp-server.herokuapp.com",
+    "capabilities": {
+      "databases": ["h2", "postgresql"],
+      "fallbackMode": "mock",
+      "multiTenant": false,
+      "audit": true,
+      "cache": true,
+      "agentFabricCompatible": true
+    },
+    "endpoints": {
+      "health": "/api/health",
+      "info": "/api/mcp/info", 
+      "tools": "/api/mcp/tools",
+      "listen": "/mcp/listen",
+      "console": "/console"
+    },
+    "tools": [
+      {
+        "name": "allocate-assets",
+        "description": "Allocate assets to employees during onboarding process. Supports complex asset objects from Agent Broker and handles multiple asset types including laptops, ID cards, phones, monitors, and headsets.",
+        "endpoint": "/api/mcp/tools/allocate-assets",
+        "method": "POST",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "employeeId": {
+              "type": "string",
+              "description": "Unique identifier for the employee"
+            },
+            "firstName": {
+              "type": "string", 
+              "description": "Employee's first name"
+            },
+            "lastName": {
+              "type": "string",
+              "description": "Employee's last name"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Employee's email address"
+            },
+            "phone": {
+              "type": "string",
+              "description": "Employee's phone number"
+            },
+            "department": {
+              "type": "string",
+              "description": "Employee's department"
+            },
+            "position": {
+              "type": "string", 
+              "description": "Employee's job position/title"
+            },
+            "assets": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": ["laptop", "id-card", "phone", "monitor", "headset"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {"type": "string"},
+                      "assetType": {"type": "string"}, 
+                      "category": {"type": "string"},
+                      "name": {"type": "string"},
+                      "assignedDate": {"type": "string"},
+                      "status": {"type": "string"}
+                    }
+                  }
+                ]
+              },
+              "description": "Array of asset types to allocate (supports both simple strings and complex objects from Agent Broker)"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Employee start date"
+            },
+            "manager": {
+              "type": "string",
+              "description": "Manager name"
+            },
+            "managerEmail": {
+              "type": "string",
+              "format": "email", 
+              "description": "Manager email"
+            },
+            "companyName": {
+              "type": "string",
+              "description": "Company name"
+            }
+          },
+          "required": ["employeeId"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "return-asset",
+        "description": "Process asset returns when employees leave or exchange equipment. Updates asset status and records return conditions.",
+        "endpoint": "/api/mcp/tools/return-asset",
+        "method": "POST", 
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "assetTag": {
+              "type": "string",
+              "description": "Unique asset tag identifier (e.g., LAP-001, ID-001)"
+            },
+            "condition": {
+              "type": "string",
+              "enum": ["EXCELLENT", "GOOD", "FAIR", "POOR", "DAMAGED"],
+              "default": "GOOD",
+              "description": "Condition of the returned asset"
+            },
+            "notes": {
+              "type": "string",
+              "description": "Additional notes about the asset return"
+            },
+            "returnDate": {
+              "type": "string",
+              "format": "date",
+              "description": "Date of asset return (defaults to current date)"
+            }
+          },
+          "required": ["assetTag"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "list-assets",
+        "description": "List all assets in the system with optional filtering by status and category. Provides comprehensive asset inventory management.",
+        "endpoint": "/api/mcp/tools/list-assets",
+        "method": "GET",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object", 
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["AVAILABLE", "ALLOCATED", "MAINTENANCE", "RETIRED"],
+              "description": "Filter assets by status"
+            },
+            "category": {
+              "type": "string",
+              "enum": ["LAPTOP", "ID_CARD", "MOBILE_PHONE", "MONITOR", "HEADSET"],
+              "description": "Filter assets by category"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get-available-assets",
+        "description": "Retrieve all available assets ready for allocation. Returns assets with AVAILABLE status across all categories.",
+        "endpoint": "/api/mcp/tools/get-available-assets",
+        "method": "GET",
+        "mcpListener": "/mcp/listen",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get-employee-assets", 
+        "description": "Get all assets currently allocated to a specific employee. Useful for tracking employee equipment and onboarding progress.",
+        "endpoint": "/api/mcp/tools/get-employee-assets",
+        "method": "POST",
+        "mcpListener": "/mcp/listen", 
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "employeeId": {
+              "type": "string",
+              "description": "Unique employee identifier (e.g., EMP001)"
+            }
+          },
+          "required": ["employeeId"],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "resources": [
+      {
+        "uri": "assets://inventory/all",
+        "name": "Complete Asset Inventory",
+        "description": "Full asset inventory with status, categories, and allocation information"
+      },
+      {
+        "uri": "assets://inventory/available", 
+        "name": "Available Assets",
+        "description": "Assets currently available for allocation"
+      },
+      {
+        "uri": "assets://inventory/allocated",
+        "name": "Allocated Assets", 
+        "description": "Assets currently allocated to employees"
+      },
+      {
+        "uri": "assets://categories/laptops",
+        "name": "Laptop Inventory",
+        "description": "All laptop assets in the system"
+      },
+      {
+        "uri": "assets://categories/id-cards",
+        "name": "ID Card Inventory", 
+        "description": "Employee ID card assets"
+      },
+      {
+        "uri": "assets://analytics/utilization",
+        "name": "Asset Utilization Analytics",
+        "description": "Asset usage statistics and utilization metrics"
+      }
+    ],
+    "features": {
+      "agentBrokerIntegration": {
+        "enabled": true,
+        "description": "Full compatibility with Employee Onboarding Agent Broker",
+        "complexObjectSupport": true,
+        "assetMetadataPreservation": true
+      },
+      "databaseSupport": {
+        "primary": "h2",
+        "fallback": "mock",
+        "autoInitialization": true,
+        "smartFallback": true
+      },
+      "monitoring": {
+        "healthChecks": true,
+        "metrics": true,
+        "logging": "INFO"
+      }
+    },
+    "integrations": {
+      "employeeOnboardingBroker": {
+        "url": "http://localhost:8081",
+        "compatible": true,
+        "dataFormat": "JSON"
+      },
+      "emailNotificationServer": {
+        "url": "http://localhost:8083", 
+        "integration": "asset-notification",
+        "compatible": true
+      }
+    }
+  }
+}

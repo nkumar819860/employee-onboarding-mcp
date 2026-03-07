@@ -127,18 +127,33 @@ mcpServers:
       transport:
         kind: streamableHttp
         path: /mcp
+      capabilities:
+        tools: true
+        resources: true
+        streaming: true
+      healthCheck: /health
   assets-allocation-mcp-server:
     label: Asset Allocation MCP Server  
     metadata:
       transport:
         kind: streamableHttp
         path: /mcp
+      capabilities:
+        tools: true
+        resources: true
+        streaming: true
+      healthCheck: /health
   notification-mcp-server:
     label: Notification MCP Server
     metadata:
       transport:
         kind: streamableHttp
         path: /mcp
+      capabilities:
+        tools: true
+        resources: true
+        streaming: true
+      healthCheck: /health
 llmProviders:
   groq-llm:
     label: Groq LLM Provider
