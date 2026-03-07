@@ -1,0 +1,101 @@
+# Mule Agent Fabric Workspace Configuration
+# This file defines the workspace structure for VSCode execution
+
+workspace:
+  name: "Employee Onboarding Agent Fabric"
+  version: "2.0.0"
+  description: "Complete employee onboarding orchestration using Agent Fabric with MCP servers"
+  
+structure:
+  agentNetwork:
+    path: "./agent-network"
+    type: "agent-network"
+    main: "agent-network.yaml"
+  
+  mcpServers:
+    - name: "employee-onboarding-mcp-server"
+      path: "./mcp-servers/employee-onboarding-mcp-server"
+      type: "mule-application"
+      main: "src/main/mule"
+    
+    - name: "assets-allocation-mcp-server"
+      path: "./mcp-servers/assets-allocation-mcp-server"
+      type: "mule-application"
+      main: "src/main/mule"
+    
+    - name: "email-notification-mcp-server"
+      path: "./mcp-servers/email-notification-mcp-server"
+      type: "mule-application"
+      main: "src/main/mule"
+  
+  brokers:
+    - name: "employee-onboarding-agent-broker"
+      path: "./brokers/employee-onboarding-agent-broker"
+      type: "mule-application"
+      main: "src/main/mule"
+
+execution:
+  mode: "local-development"
+  environment: "dev"
+  
+  startupSequence:
+    1: "mcp-servers"  # Start MCP servers first
+    2: "brokers"      # Then start brokers
+    3: "agent-network" # Finally initialize agent network
+  
+  ports:
+    agent-broker: 8081
+    employee-onboarding-mcp: 8082
+    assets-allocation-mcp: 8083
+    email-notification-mcp: 8084
+  
+  healthChecks:
+    enabled: true
+    interval: 30
+    timeout: 10
+
+vscode:
+  workspaceSettings:
+    folders:
+      - path: "./agent-network"
+        name: "Agent Network"
+      - path: "./mcp-servers"
+        name: "MCP Servers"
+      - path: "./brokers"
+        name: "Agent Brokers"
+    
+  extensions:
+    recommended:
+      - "salesforce.mule-dx-vscode"
+      - "salesforce.mule-agent-fabric"
+    
+  tasks:
+    - label: "Start MCP Servers"
+      type: "shell"
+      command: "mvn"
+      args: ["mule:run"]
+      group: "build"
+      options:
+        cwd: "./mcp-servers"
+    
+    - label: "Start Agent Broker"
+      type: "shell"
+      command: "mvn"
+      args: ["mule:run"]
+      group: "build"
+      options:
+        cwd: "./brokers"
+    
+    - label: "Deploy Agent Network"
+      type: "shell"
+      command: "mule-cli"
+      args: ["agent-network", "deploy", "--local"]
+      group: "deploy"
+
+development:
+  hotReload: true
+  debugPorts:
+    agent-broker: 5005
+    employee-onboarding-mcp: 5006
+    assets-allocation-mcp: 5007
+    email-notification-mcp: 5008

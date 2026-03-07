@@ -1,0 +1,257 @@
+{
+    "folders": [
+        {
+            "name": "Agent Network",
+            "path": "./agent-network"
+        },
+        {
+            "name": "MCP Servers",
+            "path": "./mcp-servers"
+        },
+        {
+            "name": "Agent Brokers", 
+            "path": "./brokers"
+        },
+        {
+            "name": "Documentation",
+            "path": "./"
+        }
+    ],
+    "settings": {
+        "mule.agentFabric.enabled": true,
+        "mule.agentFabric.workspaceConfig": "./mule-workspace.yaml",
+        "mule.projects.autoDetect": true,
+        "mule.runtime.localPath": "auto",
+        "mule.debugger.enabled": true,
+        "files.exclude": {
+            "**/target": true,
+            "**/.mule": true,
+            "**/node_modules": true,
+            "**/.git": true,
+            "./employee-onboarding-mcp-server": true,
+            "./assets-allocation-mcp-server": true,
+            "./email-notification-mcp-server": true,
+            "./employee-onboarding-agent-broker": true,
+            "./services": true
+        },
+        "search.exclude": {
+            "**/target": true,
+            "**/.mule": true,
+            "**/node_modules": true,
+            "./employee-onboarding-mcp-server": true,
+            "./assets-allocation-mcp-server": true,
+            "./email-notification-mcp-server": true,
+            "./employee-onboarding-agent-broker": true,
+            "./services": true
+        },
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "java.debug.settings.onBuildFailureProceed": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "salesforce.mule-dx-vscode",
+            "salesforce.mule-agent-fabric",
+            "vscjava.vscode-java-pack",
+            "ms-vscode.vscode-json",
+            "redhat.vscode-yaml"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Start All MCP Servers",
+                "type": "shell",
+                "command": "echo",
+                "args": ["Starting MCP Servers..."],
+                "group": "build",
+                "dependsOn": [
+                    "Start Employee Onboarding MCP",
+                    "Start Assets Allocation MCP", 
+                    "Start Email Notification MCP"
+                ],
+                "dependsOrder": "parallel",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "new"
+                }
+            },
+            {
+                "label": "Start Employee Onboarding MCP",
+                "type": "shell",
+                "command": "mvn",
+                "args": ["mule:run"],
+                "options": {
+                    "cwd": "./mcp-servers/employee-onboarding-mcp-server"
+                },
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "dedicated"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Start Assets Allocation MCP",
+                "type": "shell", 
+                "command": "mvn",
+                "args": ["mule:run"],
+                "options": {
+                    "cwd": "./mcp-servers/assets-allocation-mcp-server"
+                },
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "dedicated"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Start Email Notification MCP",
+                "type": "shell",
+                "command": "mvn", 
+                "args": ["mule:run"],
+                "options": {
+                    "cwd": "./mcp-servers/email-notification-mcp-server"
+                },
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "dedicated"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Start Agent Broker",
+                "type": "shell",
+                "command": "mvn",
+                "args": ["mule:run"],
+                "options": {
+                    "cwd": "./brokers/employee-onboarding-agent-broker"
+                },
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always", 
+                    "panel": "dedicated"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "Deploy Agent Network (Local)",
+                "type": "shell",
+                "command": "echo",
+                "args": ["Agent Network deployment - configure with Mule Agent Fabric CLI"],
+                "options": {
+                    "cwd": "./agent-network"
+                },
+                "group": "deploy",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "dedicated"
+                }
+            },
+            {
+                "label": "Build All Projects",
+                "type": "shell",
+                "command": "echo",
+                "args": ["Building all projects..."],
+                "group": "build",
+                "dependsOn": [
+                    "Build Employee Onboarding MCP",
+                    "Build Assets Allocation MCP",
+                    "Build Email Notification MCP", 
+                    "Build Agent Broker"
+                ],
+                "dependsOrder": "parallel"
+            },
+            {
+                "label": "Build Employee Onboarding MCP",
+                "type": "shell",
+                "command": "mvn",
+                "args": ["clean", "compile"],
+                "options": {
+                    "cwd": "./mcp-servers/employee-onboarding-mcp-server"
+                },
+                "group": "build"
+            },
+            {
+                "label": "Build Assets Allocation MCP",
+                "type": "shell",
+                "command": "mvn", 
+                "args": ["clean", "compile"],
+                "options": {
+                    "cwd": "./mcp-servers/assets-allocation-mcp-server"
+                },
+                "group": "build"
+            },
+            {
+                "label": "Build Email Notification MCP",
+                "type": "shell",
+                "command": "mvn",
+                "args": ["clean", "compile"],
+                "options": {
+                    "cwd": "./mcp-servers/email-notification-mcp-server"
+                },
+                "group": "build"
+            },
+            {
+                "label": "Build Agent Broker",
+                "type": "shell",
+                "command": "mvn",
+                "args": ["clean", "compile"], 
+                "options": {
+                    "cwd": "./brokers/employee-onboarding-agent-broker"
+                },
+                "group": "build"
+            }
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Debug Employee Onboarding MCP",
+                "type": "java",
+                "request": "attach",
+                "hostName": "localhost",
+                "port": 5006,
+                "projectName": "employee-onboarding-mcp-server"
+            },
+            {
+                "name": "Debug Assets Allocation MCP", 
+                "type": "java",
+                "request": "attach",
+                "hostName": "localhost",
+                "port": 5007,
+                "projectName": "assets-allocation-mcp-server"
+            },
+            {
+                "name": "Debug Email Notification MCP",
+                "type": "java",
+                "request": "attach", 
+                "hostName": "localhost",
+                "port": 5008,
+                "projectName": "email-notification-mcp-server"
+            },
+            {
+                "name": "Debug Agent Broker",
+                "type": "java",
+                "request": "attach",
+                "hostName": "localhost", 
+                "port": 5005,
+                "projectName": "employee-onboarding-agent-broker"
+            }
+        ]
+    }
+}

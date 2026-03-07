@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>47562e5d-bf49-440a-a0f5-a9cea0a89aa9</groupId>
         <artifactId>employee-onboarding-parent</artifactId>
         <version>2.5.0</version>
     </parent>
-    <!-- ✅ GroupId matches your org ID -->
+    <!-- ✅ GroupId matches org -->
     <groupId>47562e5d-bf49-440a-a0f5-a9cea0a89aa9</groupId>
-    <artifactId>employee-onboarding-mcp-server</artifactId>
-    <version>2.0.0</version>
+    <artifactId>employee-onboarding-agent-broker</artifactId>
+    <version>2.0.4</version>
     <packaging>mule-application</packaging>
-    <name>Employee Onboarding MCP Server</name>
-    <description>MCP Server for Employee Database Operations with H2 Database Support</description>
+    <name>employee-onborading-agent-broker</name>
+    <description>Agent Broker MCP Server for Employee Onboarding Process Orchestration</description>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- ✅ Exchange / MCP metadata -->
+        <!-- ✅ Exchange Metadata -->
         <exchange.skip>false</exchange.skip>
         <exchange.publish>true</exchange.publish>
-        <exchange.classifier>mcp</exchange.classifier>
-        <exchange.assetId>employee-onboarding-mcp-server-server</exchange.assetId>
-        <tags>Employee Management,MCP Server,Database Operations,Profile
-			Management,Multi-Database Support</tags>
-        <!-- ✅ CloudHub / Runtime -->
+        <exchange.assetId>employee-onboarding-agent-broker</exchange.assetId>
+        <!-- Use mule-application classifier for Studio compatibility -->
+        <exchange.classifier>mule-application</exchange.classifier>
+        <tags>Agent Broker,MCP Server,Process Orchestration,Employee Onboarding,Workflow Management</tags>
+        <!-- ✅ CloudHub Properties -->
         <mule.version>4.9.6</mule.version>
         <mule.runtime.version>4.9-java17</mule.runtime.version>
-        <application.name>employee-onboarding-mcp-server</application.name>
+        <application.name>employee-onboarding-agent-broker</application.name>
         <anypoint.business.group>47562e5d-bf49-440a-a0f5-a9cea0a89aa9</anypoint.business.group>
         <anypoint.platform.env>Sandbox</anypoint.platform.env>
         <cloudhub.region>us-east-1</cloudhub.region>
@@ -48,7 +48,7 @@
         <repository>
             <id>anypoint-exchange-v3</id>
             <name>Anypoint Exchange V3</name>
-            <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/47562e5d-bf49-440a-a0f5-a9cea0a89aa9/maven</url>
             <layout>default</layout>
         </repository>
     </repositories>
@@ -75,13 +75,13 @@
             <version>1.2.7</version>
             <classifier>mule-plugin</classifier>
         </dependency>
-        <!-- PostgreSQL dependency removed - using H2 for development -->
-        <!--
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-		</dependency>
-		-->
+        <!-- ✅ MCP Connector for Agent Broker - Commented out until available -->
+        <!-- <dependency> <groupId>com.mulesoft.connectors</groupId> <artifactId>mule-mcp-connector</artifactId> 
+			<version>1.0.0</version> <classifier>mule-plugin</classifier> </dependency> -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -90,26 +90,23 @@
     </dependencies>
     <build>
         <plugins>
-            <!-- ✅ Mule Maven Plugin (CloudHub + Exchange) -->
+            <!-- ✅ Mule Maven Plugin - Exchange + CloudHub -->
             <plugin>
                 <groupId>org.mule.tools.maven</groupId>
                 <artifactId>mule-maven-plugin</artifactId>
                 <version>${mule.maven.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <!-- ✅ Shared libs for DB connectors -->
+                    <!-- ✅ Shared Libraries -->
                     <sharedLibraries>
                         <sharedLibrary>
                             <groupId>com.h2database</groupId>
                             <artifactId>h2</artifactId>
                         </sharedLibrary>
-                        <!-- PostgreSQL shared library removed - using H2 only -->
-                        <!--
-						<sharedLibrary>
-							<groupId>org.postgresql</groupId>
-							<artifactId>postgresql</artifactId>
-						</sharedLibrary>
-						-->
+                        <sharedLibrary>
+                            <groupId>org.postgresql</groupId>
+                            <artifactId>postgresql</artifactId>
+                        </sharedLibrary>
                     </sharedLibraries>
                     <!-- ✅ CloudHub deployment -->
                     <cloudHubDeployment>
@@ -148,6 +145,18 @@
                                     <key>secure.key</key>
                                     <value>mule</value>
                                 </keyValuePair>
+                                <keyValuePair>
+                                    <key>anypoint.platform.visualizer</key>
+                                    <value>true</value>
+                                </keyValuePair>
+                                <keyValuePair>
+                                    <key>anypoint.platform.visualizer.displayName</key>
+                                    <value>Agent Broker MCP Server</value>
+                                </keyValuePair>
+                                <keyValuePair>
+                                    <key>anypoint.platform.visualizer.layer</key>
+                                    <value>Agent</value>
+                                </keyValuePair>
                             </keyValuePairs>
                         </properties>
                     </cloudHubDeployment>
@@ -167,19 +176,14 @@
                     <skipValidation>false</skipValidation>
                     <skipDeployment>false</skipDeployment>
                     <!-- ✅ Enhanced Asset Documentation -->
-                    <includeReadme>true</includeReadme>
+                    <includeReadme>false</includeReadme>
                     <includeApiSpec>true</includeApiSpec>
-                    <readmePath>README.md</readmePath>
-                    <apiSpecPath>src/main/resources/api/employee-onboarding-mcp-server-api.yaml</apiSpecPath>
+                    <apiSpecPath>src/main/resources/api/agent-broker-mcp-api.yaml</apiSpecPath>
                     <!-- ✅ Additional Asset Files -->
                     <assetFiles>
                         <assetFile>
-                            <source>README.md</source>
-                            <target>README.md</target>
-                        </assetFile>
-                        <assetFile>
-                            <source>src/main/resources/api/employee-onboarding-mcp-server-api.yaml</source>
-                            <target>api/employee-onboarding-mcp-server-api.yaml</target>
+                            <source>src/main/resources/api/agent-broker-mcp-api.yaml</source>
+                            <target>api/agent-broker-mcp-api.yaml</target>
                         </assetFile>
                         <assetFile>
                             <source>exchange.json</source>
@@ -193,31 +197,27 @@
                     <!-- ✅ Asset Metadata Enhancement -->
                     <categories>
                         <category>MCP Server</category>
-                        <category>Employee Management</category>
-                        <category>Database Operations</category>
                         <category>Employee Onboarding</category>
+                        <category>Agent Broker</category>
+                        <category>Process Orchestration</category>
                     </categories>
                     <!-- ✅ Custom Fields -->
                     <customFields>
                         <customField>
                             <name>mcp-server-type</name>
-                            <value>employee-onboarding</value>
+                            <value>agent-broker</value>
                         </customField>
                         <customField>
                             <name>integration-pattern</name>
-                            <value>database-operations</value>
+                            <value>orchestration</value>
                         </customField>
                         <customField>
                             <name>supported-operations</name>
-                            <value>create-employee,get-employee,update-employee,delete-employee,list-employees,check-employee-exists</value>
+                            <value>orchestrate-employee-onboarding,get-onboarding-status,retry-failed-step,think</value>
                         </customField>
                         <customField>
                             <name>runtime-version</name>
                             <value>${mule.runtime.version}</value>
-                        </customField>
-                        <customField>
-                            <name>database-support</name>
-                            <value>H2</value>
                         </customField>
                     </customFields>
                 </configuration>

@@ -6,15 +6,16 @@
     "groupId": "47562e5d-bf49-440a-a0f5-a9cea0a89aa9",
     "assetId": "assets-allocation-mcp-server",
     "classifier": "mule-application",
-	"type": "muleApplication",
+    "type": "template",
     "keywords": [
-        "mcp",
+        "mcp-server",
         "asset-management",
         "employee-resources",
         "it-assets",
         "inventory-management",
         "allocation",
-        "mulesoft"
+        "mulesoft",
+        "mcp"
     ],
     "author": "MCP Development Team",
     "license": "MIT",

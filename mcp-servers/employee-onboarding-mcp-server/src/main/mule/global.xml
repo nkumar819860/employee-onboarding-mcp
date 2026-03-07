@@ -251,11 +251,10 @@ output application/json
 		<logger level="INFO" message="Server URL: ${mcp.server.baseUrl}"/>
 		<logger level="INFO" message="APIKit Router enabled for contract-first API development"/>
 		
-		<!-- Initialize database if enabled -->
-		<choice doc:name="Initialize Database">
+		<!-- Database initialization now handled via H2 script approach -->
+		<choice doc:name="Database Status">
 			<when expression="${db.initialization.enabled}">
-				<logger level="INFO" message="Database initialization enabled - setting up H2 database"/>
-				<flow-ref name="setup-h2-database"/>
+				<logger level="INFO" message="Database initialization enabled - using H2 script-based approach (init-h2.sql)"/>
 			</when>
 			<otherwise>
 				<logger level="DEBUG" message="Database initialization disabled"/>

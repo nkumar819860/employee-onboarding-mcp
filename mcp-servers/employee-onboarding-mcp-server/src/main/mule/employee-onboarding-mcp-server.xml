@@ -703,9 +703,10 @@ output application/json
 	</flow>
 
 	<!-- ========================================================================================= -->
-	<!-- DATABASE INITIALIZATION - NOW HANDLED BY H2 POST-SCRIPT -->
+	<!-- DATABASE INITIALIZATION - HANDLED BY H2 SCRIPT APPROACH -->
 	<!-- ========================================================================================= -->
 
+	<!-- Simple Database Health Verification (No DDL Operations) -->
 	<flow name="database-verification" initialState="started" doc:name="Database Schema Verification">
 		<scheduler doc:name="Database Verification Scheduler">
 			<scheduling-strategy>
@@ -715,7 +716,7 @@ output application/json
 		
 		<choice doc:name="Database Verification Enabled?">
 			<when expression="${db.initialization.enabled}">
-				<logger level="INFO" message="Verifying database schema initialization via H2 post-script"/>
+				<logger level="INFO" message="Database initialized via H2 script - Verifying schema exists"/>
 				<try doc:name="Verify Schema">
 					<db:select config-ref="H2_Database_Config">
 						<db:sql>SELECT COUNT(*) as table_count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'</db:sql>
@@ -723,7 +724,7 @@ output application/json
 					<logger level="INFO" message="Database schema verification successful - Tables found: #[payload[0].table_count]"/>
 					<error-handler>
 						<on-error-continue type="ANY">
-							<logger level="WARN" message="Database schema verification failed - tables may not be initialized: #[error.description]"/>
+							<logger level="WARN" message="Database schema verification failed: #[error.description]"/>
 						</on-error-continue>
 					</error-handler>
 				</try>
@@ -732,217 +733,6 @@ output application/json
 				<logger level="DEBUG" message="Database schema verification disabled via configuration"/>
 			</otherwise>
 		</choice>
-	</flow>
-
-
-	<!-- ========================================================================================= -->
-	<!-- DATABASE SETUP FLOWS -->
-	<!-- ========================================================================================= -->
-
-	
-
-	<!-- H2 Database Setup -->
-	<flow name="setup-h2-database" doc:name="H2 Database Setup">
-		<logger level="INFO" message="Initializing H2 database..."/>
-		
-		<try doc:name="H2 Connection Test">
-			<db:select config-ref="H2_Database_Config">
-				<db:sql><![CDATA[SELECT 1 as test]]></db:sql>
-			</db:select>
-			
-			<logger level="INFO" message="H2 connection successful"/>
-			
-			<!-- Create tables if they don't exist -->
-			<flow-ref name="create-h2-tables"/>
-			
-			<error-handler>
-				<on-error-propagate type="ANY">
-					<logger level="ERROR" message="H2 setup failed: #[error.description]"/>
-				</on-error-propagate>
-			</error-handler>
-		</try>
-	</flow>
-
-	
-
-	<!-- Create H2 Tables -->
-	<flow name="create-h2-tables" doc:name="Create H2 Tables">
-		<choice doc:name="Check if initialization is enabled">
-			<when expression="${db.initialization.enabled}">
-				<logger level="INFO" message="Database initialization enabled - executing full schema setup"/>
-				
-				<!-- Execute the comprehensive H2 initialization script -->
-				<try doc:name="Execute Full Schema Initialization">
-					<!-- Enable PostgreSQL compatibility mode -->
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[SET MODE PostgreSQL]]></db:sql>
-					</db:execute-ddl>
-					
-					<!-- Create departments table -->
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[
-							CREATE TABLE IF NOT EXISTS departments (
-								id INT AUTO_INCREMENT PRIMARY KEY,
-								name VARCHAR(100) NOT NULL,
-								description VARCHAR(255),
-								manager_name VARCHAR(100),
-								created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-								updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-							)
-						]]></db:sql>
-					</db:execute-ddl>
-					
-					<!-- Create employees table -->
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[
-							CREATE TABLE IF NOT EXISTS employees (
-								id INT AUTO_INCREMENT PRIMARY KEY,
-								employee_id VARCHAR(20) UNIQUE NOT NULL,
-								first_name VARCHAR(50) NOT NULL,
-								last_name VARCHAR(50) NOT NULL,
-								email VARCHAR(100) UNIQUE NOT NULL,
-								phone VARCHAR(20),
-								department_id INT,
-								position VARCHAR(100),
-								hire_date DATE,
-								status VARCHAR(20) DEFAULT 'PENDING',
-								salary DECIMAL(10,2),
-								manager_id INT,
-								address VARCHAR(500),
-								emergency_contact_name VARCHAR(100),
-								emergency_contact_phone VARCHAR(20),
-								created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-								updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-							)
-						]]></db:sql>
-					</db:execute-ddl>
-					
-					<!-- Create employee_documents table -->
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[
-							CREATE TABLE IF NOT EXISTS employee_documents (
-								id INT AUTO_INCREMENT PRIMARY KEY,
-								employee_id INT,
-								document_type VARCHAR(50) NOT NULL,
-								document_name VARCHAR(100) NOT NULL,
-								document_path VARCHAR(255),
-								document_status VARCHAR(20) DEFAULT 'PENDING',
-								uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-								verified_at TIMESTAMP NULL,
-								verified_by VARCHAR(100)
-							)
-						]]></db:sql>
-					</db:execute-ddl>
-					
-					<!-- Add foreign key constraints -->
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[
-							ALTER TABLE employees ADD CONSTRAINT IF NOT EXISTS fk_emp_dept FOREIGN KEY (department_id) REFERENCES departments(id)
-						]]></db:sql>
-					</db:execute-ddl>
-					
-					<db:execute-ddl config-ref="H2_Database_Config">
-						<db:sql><![CDATA[
-							ALTER TABLE employee_documents ADD CONSTRAINT IF NOT EXISTS fk_doc_emp FOREIGN KEY (employee_id) REFERENCES employees(id)
-						]]></db:sql>
-					</db:execute-ddl>
-					
-					<!-- Insert sample data -->
-					<flow-ref name="insert-sample-data"/>
-					
-					<logger level="INFO" message="H2 database fully initialized with schema and sample data"/>
-					
-					<error-handler>
-						<on-error-continue type="ANY">
-							<logger level="WARN" message="Database initialization failed, creating basic table: #[error.description]"/>
-							<!-- Fallback to basic table creation -->
-							<db:execute-ddl config-ref="H2_Database_Config">
-								<db:sql><![CDATA[
-									CREATE TABLE IF NOT EXISTS employees (
-										id INT AUTO_INCREMENT PRIMARY KEY,
-										employee_id VARCHAR(50) UNIQUE NOT NULL,
-										first_name VARCHAR(100) NOT NULL,
-										last_name VARCHAR(100) NOT NULL,
-										email VARCHAR(200) UNIQUE NOT NULL,
-										phone VARCHAR(20),
-										department_id INTEGER,
-										position VARCHAR(100),
-										hire_date DATE DEFAULT CURRENT_DATE(),
-										status VARCHAR(20) DEFAULT 'PENDING',
-										salary DECIMAL(10,2),
-										address VARCHAR(2000),
-										created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-										updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
-									)
-								]]></db:sql>
-							</db:execute-ddl>
-						</on-error-continue>
-					</error-handler>
-				</try>
-			</when>
-			<otherwise>
-				<logger level="INFO" message="Database initialization disabled - creating basic table only"/>
-				<db:execute-ddl config-ref="H2_Database_Config">
-					<db:sql><![CDATA[
-						CREATE TABLE IF NOT EXISTS employees (
-							id INT AUTO_INCREMENT PRIMARY KEY,
-							employee_id VARCHAR(50) UNIQUE NOT NULL,
-							first_name VARCHAR(100) NOT NULL,
-							last_name VARCHAR(100) NOT NULL,
-							email VARCHAR(200) UNIQUE NOT NULL,
-							phone VARCHAR(20),
-							department_id INTEGER,
-							position VARCHAR(100),
-							hire_date DATE DEFAULT CURRENT_DATE(),
-							status VARCHAR(20) DEFAULT 'PENDING',
-							salary DECIMAL(10,2),
-							address VARCHAR(2000),
-							created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-							updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
-						)
-					]]></db:sql>
-				</db:execute-ddl>
-			</otherwise>
-		</choice>
-	</flow>
-
-	<!-- Insert Sample Data Flow -->
-	<flow name="insert-sample-data" doc:name="Insert Sample Data">
-		<logger level="INFO" message="Inserting sample data into H2 database"/>
-		
-		<try doc:name="Insert Sample Data">
-			<!-- Insert sample departments -->
-			<db:insert config-ref="H2_Database_Config">
-				<db:sql><![CDATA[
-					INSERT INTO departments (name, description, manager_name) VALUES
-					('Human Resources', 'Employee management and relations', 'Sarah Johnson'),
-					('Engineering', 'Software development and technical operations', 'Michael Chen'),
-					('Marketing', 'Brand promotion and customer engagement', 'Emily Rodriguez'),
-					('Finance', 'Financial planning and accounting', 'David Kim'),
-					('Operations', 'Business operations and logistics', 'Lisa Thompson')
-				]]></db:sql>
-			</db:insert>
-			
-			<!-- Insert sample employees -->
-			<db:insert config-ref="H2_Database_Config">
-				<db:sql><![CDATA[
-					INSERT INTO employees (employee_id, first_name, last_name, email, phone, department_id, position, hire_date, status, salary, address, emergency_contact_name, emergency_contact_phone) VALUES
-					('EMP001', 'John', 'Smith', 'john.smith@company.com', '+1-555-0101', 2, 'Senior Software Engineer', '2024-01-15', 'ACTIVE', 85000.00, '123 Main St, City, State 12345', 'Jane Smith', '+1-555-0102'),
-					('EMP002', 'Maria', 'Garcia', 'maria.garcia@company.com', '+1-555-0201', 3, 'Marketing Manager', '2024-02-01', 'ACTIVE', 75000.00, '456 Oak Ave, City, State 12346', 'Carlos Garcia', '+1-555-0202'),
-					('EMP003', 'Robert', 'Wilson', 'robert.wilson@company.com', '+1-555-0301', 1, 'HR Specialist', '2024-01-20', 'ACTIVE', 60000.00, '789 Pine Rd, City, State 12347', 'Nancy Wilson', '+1-555-0302'),
-					('EMP004', 'Jennifer', 'Brown', 'jennifer.brown@company.com', '+1-555-0401', 4, 'Financial Analyst', '2024-02-15', 'PENDING', 65000.00, '321 Elm St, City, State 12348', 'Tom Brown', '+1-555-0402'),
-					('EMP005', 'Alex', 'Davis', 'alex.davis@company.com', '+1-555-0501', 2, 'Junior Developer', '2024-03-01', 'PENDING', 55000.00, '654 Maple Dr, City, State 12349', 'Sam Davis', '+1-555-0502')
-				]]></db:sql>
-			</db:insert>
-			
-			<logger level="INFO" message="Sample data inserted successfully"/>
-			
-			<error-handler>
-				<on-error-continue type="ANY">
-					<logger level="WARN" message="Failed to insert sample data (may already exist): #[error.description]"/>
-				</on-error-continue>
-			</error-handler>
-		</try>
 	</flow>
 
 	<!-- ========================================================================================= -->

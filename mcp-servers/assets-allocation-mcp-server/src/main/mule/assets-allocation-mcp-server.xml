@@ -1053,10 +1053,10 @@ output application/json
 {
 	success: true,
 	message: "Assets allocated successfully via H2 embedded database" ++ 
-		(if (payload.originalAssets != null and sizeOf(payload.originalAssets) > 0) " - Complex asset objects from Agent Broker processed" else ""),
-	database: vars.databaseUsed,
-	employeeId: payload.employeeId,
-	employeeName: (payload.firstName default "") ++ ' ' ++ (payload.lastName default ""),
+		(if (vars.requestPayload.originalAssets != null and sizeOf(vars.requestPayload.originalAssets) > 0) " - Complex asset objects from Agent Broker processed" else ""),
+	database: "h2",
+	employeeId: vars.requestPayload.employeeId,
+	employeeName: (vars.requestPayload.firstName default "") ++ ' ' ++ (vars.requestPayload.lastName default ""),
 	// Return assets in the format expected by onboarding broker (JSON objects)
 	allocatedAssets: vars.allocatedAssets map (asset, index) -> {
 		'type': asset.category,
@@ -1073,12 +1073,12 @@ output application/json
 	},
 	allocationCount: sizeOf(vars.allocatedAssets),
 	// Include tracking of original complex assets if they were provided
-	originalAssetObjects: if (payload.originalAssets != null and sizeOf(payload.originalAssets) > 0) payload.originalAssets else null,
-	assetTypesProcessed: payload.assets,
+	originalAssetObjects: if (vars.requestPayload.originalAssets != null and sizeOf(vars.requestPayload.originalAssets) > 0) vars.requestPayload.originalAssets else null,
+	assetTypesProcessed: vars.requestPayload.assets,
 	processingInfo: {
-		agentBrokerCompatible: payload.originalAssets != null and sizeOf(payload.originalAssets) > 0,
-		complexObjectsHandled: if (payload.originalAssets != null) sizeOf(payload.originalAssets) else 0,
-		assetTypesExtracted: payload.assets,
+		agentBrokerCompatible: vars.requestPayload.originalAssets != null and sizeOf(vars.requestPayload.originalAssets) > 0,
+		complexObjectsHandled: if (vars.requestPayload.originalAssets != null) sizeOf(vars.requestPayload.originalAssets) else 0,
+		assetTypesExtracted: vars.requestPayload.assets,
 		brokerFormatResponse: true
 	},
 	timestamp: now() as String {format: 'yyyy-MM-dd HH:mm:ss'},
@@ -1151,7 +1151,6 @@ output application/json
 				}]]]></db:input-parameters>
 			</db:select>
 			<set-variable variableName="databaseUsed" value="h2"/>
-		</try>
 			
 			<ee:transform doc:name="Format Assets List Response">
 				<ee:message>
@@ -1180,6 +1179,7 @@ output application/json
 					<flow-ref name="list-assets-mock-response"/>
 				</on-error-continue>
 			</error-handler>
+		</try>
 	</flow>
 
 	<!-- Get Available Assets with Fallback Strategy -->
@@ -1196,7 +1196,6 @@ output application/json
 				]]></db:sql>
 			</db:select>
 			<set-variable variableName="databaseUsed" value="h2"/>
-		</try>
 			
 			<ee:transform doc:name="Format Available Assets Response">
 				<ee:message>
@@ -1221,6 +1220,7 @@ output application/json
 					<flow-ref name="get-available-assets-mock-response"/>
 				</on-error-continue>
 			</error-handler>
+		</try>
 	</flow>
 
 	<!-- Get Employee Assets with Fallback Strategy -->
@@ -1691,7 +1691,7 @@ output application/java
 
 	<!-- Allocate Assets Mock Response -->
 	<flow name="allocate-assets-mock-response" doc:name="Allocate Assets Mock Response">
-		<logger level="WARN" message="Using mock mode for asset allocation - ID: #[payload.employeeId default 'unknown']"/>
+		<logger level="WARN" message="Using mock mode for asset allocation - ID: #[vars.requestPayload.employeeId default 'unknown']"/>
 		
 		<ee:transform doc:name="Mock Allocate Response">
 			<ee:message>
@@ -1702,8 +1702,8 @@ output application/json
 	success: true,
 	message: "Assets allocated successfully (mock mode)",
 	database: "mock",
-	employeeId: payload.employeeId default "EMP001",
-	employeeName: (payload.firstName default "Mock") ++ " " ++ (payload.lastName default "Employee"),
+	employeeId: vars.requestPayload.employeeId default "EMP001",
+	employeeName: (vars.requestPayload.firstName default "Mock") ++ " " ++ (vars.requestPayload.lastName default "Employee"),
 	// Return assets in the format expected by onboarding broker (JSON objects)
 	allocatedAssets: [
 		{

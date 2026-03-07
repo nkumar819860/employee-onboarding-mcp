@@ -5,8 +5,8 @@
     "main": "pom.xml",
     "groupId": "47562e5d-bf49-440a-a0f5-a9cea0a89aa9",
     "assetId": "employee-onboarding-agent-broker",
-    "classifier": "mcp",
-    "type": "mcpServer",
+    "classifier": "mule-application",
+    "type": "template",
     "keywords": [
         "mcp-server",
         "agent-broker",
