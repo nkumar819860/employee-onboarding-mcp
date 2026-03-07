@@ -921,9 +921,9 @@ output application/java
 		</try>
 	</flow>
 
-		<!-- H2 Asset Allocation -->
+	<!-- H2 Asset Allocation -->
 	<flow name="allocate-assets-h2" doc:name="H2 Asset Allocation">
-		<logger level="INFO" message="🏠 Processing allocation via H2 embedded database..." />
+		<logger level="INFO" message="🏠 Processing allocation via H2 embedded database for employee: #[payload.employeeId]" />
 		<set-variable variableName="allocatedAssets" value="#[[]]" />
 		
 		<!-- Initialize H2 database if needed -->
@@ -939,103 +939,154 @@ output application/java
 			</error-handler>
 		</try>
 		
+		<!-- Ensure employee exists in database -->
+		<try doc:name="Create Employee If Not Exists">
+			<db:select config-ref="H2_Database_Config">
+				<db:sql><![CDATA[SELECT id FROM employees WHERE employee_id = :employeeId]]></db:sql>
+				<db:input-parameters><![CDATA[#[{'employeeId': payload.employeeId}]]]></db:input-parameters>
+			</db:select>
+			
+			<choice doc:name="Employee Exists?">
+				<when expression="#[sizeOf(payload) == 0]">
+					<logger level="INFO" message="🔧 Creating new employee record: #[vars.requestPayload.employeeId]"/>
+					
+					<!-- Get or create default department -->
+					<db:select config-ref="H2_Database_Config">
+						<db:sql><![CDATA[SELECT id FROM departments WHERE name = 'Human Resources' OR name = 'IT' LIMIT 1]]></db:sql>
+					</db:select>
+					<set-variable variableName="defaultDeptId" value="#[if (sizeOf(payload) > 0) payload[0].id else 1]"/>
+					
+					<!-- Insert new employee -->
+					<db:insert config-ref="H2_Database_Config">
+						<db:sql><![CDATA[
+							INSERT INTO employees (employee_id, first_name, last_name, email, phone, department_id, position, hire_date, status, location, cost_center)
+							VALUES (:employeeId, :firstName, :lastName, :email, :phone, :deptId, :position, :hireDate, 'ACTIVE', 'Office', 'EMP001')
+						]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+							'employeeId': vars.requestPayload.employeeId,
+							'firstName': vars.requestPayload.firstName default "Unknown",
+							'lastName': vars.requestPayload.lastName default "Employee", 
+							'email': vars.requestPayload.email default (vars.requestPayload.employeeId ++ "@company.com"),
+							'phone': vars.requestPayload.phone default "+1-555-0000",
+							'deptId': vars.defaultDeptId,
+							'position': vars.requestPayload.position default "Employee",
+							'hireDate': vars.requestPayload.startDate default (now() as String {format: 'yyyy-MM-dd'})
+						}]]]></db:input-parameters>
+					</db:insert>
+					<logger level="INFO" message="✅ Employee created: #[vars.requestPayload.employeeId]"/>
+				</when>
+				<otherwise>
+					<logger level="DEBUG" message="Employee already exists: #[vars.requestPayload.employeeId]"/>
+				</otherwise>
+			</choice>
+			
+			<error-handler>
+				<on-error-continue type="ANY">
+					<logger level="WARN" message="Employee creation/check failed: #[error.description]"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		
 		<!-- Allocate each requested asset from H2 database with JSON object support -->
 		<choice>
 			<when expression="#[payload.assets != null and sizeOf(payload.assets) > 0]">
 				<foreach collection="#[payload.assets]" counterVariableName="assetIndex">
-					<set-variable variableName="currentAssetType" value="#[payload]" />
+					<set-variable variableName="currentAssetType" value="#[upper(payload)]" />
 					<set-variable variableName="currentOriginalAsset" value="#[if (vars.requestPayload.originalAssets != null and sizeOf(vars.requestPayload.originalAssets) > vars.assetIndex) vars.requestPayload.originalAssets[vars.assetIndex] else null]" />
-			
-			<!-- Find available asset in H2 -->
-			<db:select config-ref="H2_Database_Config">
-				<db:sql><![CDATA[
-					SELECT a.*, ac.category_name 
-					FROM assets a 
-					JOIN asset_categories ac ON a.category_id = ac.id 
-					WHERE ac.category_name = :assetType 
-					AND a.status = 'AVAILABLE' 
-					ORDER BY a.purchase_date DESC 
-					LIMIT 1
-				]]></db:sql>
-				<db:input-parameters><![CDATA[#[{'assetType': vars.currentAssetType}]]]></db:input-parameters>
-			</db:select>
-			
-			<choice>
-				<when expression="#[payload.size() > 0]">
-					<set-variable variableName="selectedAsset" value="#[payload[0]]" />
 					
-					<!-- Update asset status in H2 -->
-					<db:update config-ref="H2_Database_Config">
-						<db:sql><![CDATA[UPDATE assets SET status = 'ALLOCATED' WHERE id = :assetId]]></db:sql>
-						<db:input-parameters><![CDATA[#[{'assetId': vars.selectedAsset.id}]]]></db:input-parameters>
-					</db:update>
+					<logger level="INFO" message="🔍 Looking for asset of type: #[vars.currentAssetType]" />
+			
+					<!-- Find available asset in H2 -->
+					<db:select config-ref="H2_Database_Config">
+						<db:sql><![CDATA[
+							SELECT a.*, ac.category_name 
+							FROM assets a 
+							JOIN asset_categories ac ON a.category_id = ac.id 
+							WHERE UPPER(ac.category_name) = :assetType 
+							AND a.status = 'AVAILABLE' 
+							ORDER BY a.purchase_date DESC 
+							LIMIT 1
+						]]></db:sql>
+						<db:input-parameters><![CDATA[#[{'assetType': vars.currentAssetType}]]]></db:input-parameters>
+					</db:select>
 					
-					<!-- Add asset allocation record if original asset object contains metadata -->
 					<choice>
-						<when expression="#[vars.currentOriginalAsset != null]">
-							<!-- Insert allocation record with original asset metadata -->
-							<db:insert config-ref="H2_Database_Config">
-								<db:sql><![CDATA[
-									INSERT INTO asset_allocations 
-									(asset_id, employee_id, allocated_date, allocation_status, allocation_reason, notes) 
-									VALUES (:assetId, 
-										(SELECT id FROM employees WHERE employee_id = :employeeId LIMIT 1), 
-										:allocatedDate, 
-										'ALLOCATED', 
-										'Agent Broker Allocation', 
-										:originalAssetJson)
-								]]></db:sql>
-								<db:input-parameters><![CDATA[#[{
-									'assetId': vars.selectedAsset.id,
-									'employeeId': vars.requestPayload.employeeId,
-									'allocatedDate': vars.currentOriginalAsset.assignedDate default (now() as String {format: 'yyyy-MM-dd'}),
-									'originalAssetJson': write(vars.currentOriginalAsset, "application/json")
-								}]]]></db:input-parameters>
-							</db:insert>
-							<logger level="INFO" message="📝 Allocation record created with original asset metadata" />
+						<when expression="#[sizeOf(payload) > 0]">
+							<set-variable variableName="selectedAsset" value="#[payload[0]]" />
+							<logger level="INFO" message="✅ Found available asset: #[vars.selectedAsset.asset_tag]" />
+							
+							<!-- Update asset status in H2 -->
+							<db:update config-ref="H2_Database_Config">
+								<db:sql><![CDATA[UPDATE assets SET status = 'ALLOCATED' WHERE id = :assetId]]></db:sql>
+								<db:input-parameters><![CDATA[#[{'assetId': vars.selectedAsset.id}]]]></db:input-parameters>
+							</db:update>
+							<logger level="INFO" message="📝 Asset status updated to ALLOCATED" />
+							
+							<!-- Get employee ID for allocation record -->
+							<db:select config-ref="H2_Database_Config">
+								<db:sql><![CDATA[SELECT id FROM employees WHERE employee_id = :employeeId]]></db:sql>
+								<db:input-parameters><![CDATA[#[{'employeeId': vars.requestPayload.employeeId}]]]></db:input-parameters>
+							</db:select>
+							<set-variable variableName="employeeDbId" value="#[payload[0].id]"/>
+							
+							<!-- Add asset allocation record -->
+							<choice>
+								<when expression="#[vars.currentOriginalAsset != null]">
+									<!-- Insert allocation record with original asset metadata -->
+									<db:insert config-ref="H2_Database_Config">
+										<db:sql><![CDATA[
+											INSERT INTO asset_allocations 
+											(asset_id, employee_id, allocated_date, allocation_status, allocation_reason, notes) 
+											VALUES (:assetId, :employeeId, :allocatedDate, 'ALLOCATED', 'Agent Broker Allocation', :originalAssetJson)
+										]]></db:sql>
+										<db:input-parameters><![CDATA[#[{
+											'assetId': vars.selectedAsset.id,
+											'employeeId': vars.employeeDbId,
+											'allocatedDate': vars.currentOriginalAsset.assignedDate default (now() as String {format: 'yyyy-MM-dd'}),
+											'originalAssetJson': write(vars.currentOriginalAsset, "application/json")
+										}]]]></db:input-parameters>
+									</db:insert>
+									<logger level="INFO" message="📝 Allocation record created with original asset metadata" />
+								</when>
+								<otherwise>
+									<!-- Insert basic allocation record -->
+									<db:insert config-ref="H2_Database_Config">
+										<db:sql><![CDATA[
+											INSERT INTO asset_allocations 
+											(asset_id, employee_id, allocated_date, allocation_status, allocation_reason) 
+											VALUES (:assetId, :employeeId, :allocatedDate, 'ALLOCATED', 'Basic Asset Allocation')
+										]]></db:sql>
+										<db:input-parameters><![CDATA[#[{
+											'assetId': vars.selectedAsset.id,
+											'employeeId': vars.employeeDbId,
+											'allocatedDate': now() as String {format: 'yyyy-MM-dd'}
+										}]]]></db:input-parameters>
+									</db:insert>
+									<logger level="INFO" message="📝 Basic allocation record created" />
+								</otherwise>
+							</choice>
+							
+							<!-- Add to allocated assets list with original metadata if available -->
+							<set-variable variableName="allocatedAssets" value="#[vars.allocatedAssets + [{
+								assetId: vars.selectedAsset.id,
+								assetTag: vars.selectedAsset.asset_tag,
+								assetName: vars.selectedAsset.asset_name,
+								category: vars.selectedAsset.category_name,
+								brand: vars.selectedAsset.brand,
+								model: vars.selectedAsset.model,
+								serialNumber: vars.selectedAsset.serial_number,
+								condition: vars.selectedAsset.condition_status,
+								allocationDate: if (vars.currentOriginalAsset != null) vars.currentOriginalAsset.assignedDate default (now() as String {format: 'yyyy-MM-dd'}) else (now() as String {format: 'yyyy-MM-dd'}),
+								status: if (vars.currentOriginalAsset != null) vars.currentOriginalAsset.status default 'ALLOCATED' else 'ALLOCATED',
+								originalAssetMetadata: vars.currentOriginalAsset
+							}]]" />
+							
+							<logger level="INFO" message="✅ H2 asset allocated: #[vars.selectedAsset.asset_tag] to #[vars.requestPayload.employeeId]" />
 						</when>
 						<otherwise>
-							<!-- Insert basic allocation record -->
-							<db:insert config-ref="H2_Database_Config">
-								<db:sql><![CDATA[
-									INSERT INTO asset_allocations 
-									(asset_id, employee_id, allocated_date, allocation_status, allocation_reason) 
-									VALUES (:assetId, 
-										(SELECT id FROM employees WHERE employee_id = :employeeId LIMIT 1), 
-										:allocatedDate, 
-										'ALLOCATED', 
-										'Basic Asset Allocation')
-								]]></db:sql>
-								<db:input-parameters><![CDATA[#[{
-									'assetId': vars.selectedAsset.id,
-									'employeeId': vars.requestPayload.employeeId,
-									'allocatedDate': now() as String {format: 'yyyy-MM-dd'}
-								}]]]></db:input-parameters>
-							</db:insert>
+							<logger level="WARN" message="⚠️ No available H2 assets of type: #[vars.currentAssetType]" />
 						</otherwise>
 					</choice>
-					
-					<!-- Add to allocated assets list with original metadata if available -->
-					<set-variable variableName="allocatedAssets" value="#[vars.allocatedAssets + [{
-						assetId: vars.selectedAsset.id,
-						assetTag: vars.selectedAsset.asset_tag,
-						assetName: vars.selectedAsset.asset_name,
-						category: vars.selectedAsset.category_name,
-						brand: vars.selectedAsset.brand,
-						model: vars.selectedAsset.model,
-						serialNumber: vars.selectedAsset.serial_number,
-						condition: vars.selectedAsset.condition_status,
-						allocationDate: if (vars.currentOriginalAsset != null) vars.currentOriginalAsset.assignedDate default (now() as String {format: 'yyyy-MM-dd'}) else (now() as String {format: 'yyyy-MM-dd'}),
-						status: if (vars.currentOriginalAsset != null) vars.currentOriginalAsset.status default 'ALLOCATED' else 'ALLOCATED',
-						originalAssetMetadata: vars.currentOriginalAsset
-					}]]" />
-					
-					<logger level="INFO" message="✅ H2 asset allocated: #[vars.selectedAsset.asset_tag] to #[vars.requestPayload.employeeId]" />
-				</when>
-				<otherwise>
-					<logger level="WARN" message="⚠️ No available H2 assets of type: #[vars.currentAssetType]" />
-				</otherwise>
-			</choice>
 				</foreach>
 			</when>
 			<otherwise>
